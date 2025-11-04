@@ -1,8 +1,9 @@
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit, NgZone } from '@angular/core';
 import { Router } from '@angular/router';
-import { JumpingService, GameState, EffectEvent } from './jumping.service';
+import { JumpingService, GameState, EffectEvent, GameMode } from './jumping.service';
 import { Subscription } from 'rxjs';
 import { JUMPING_CONFIG } from './jumping.config';
+import { Song } from './jumping-songs.config';
 
 interface MeteorLine {
   x: number;
@@ -44,10 +45,18 @@ export class JumpingComponent implements OnInit, AfterViewInit, OnDestroy {
     score: 0,
     height: 0,
     gameTime: 0,
+    gameMode: GameMode.FREE,
+    currentSong: null,
+    creativeSequence: [],
+    songProgress: 0,
     state: GameState.MENU,
     canvasWidth: 0,
     canvasHeight: 0
   };
+
+  availableSongs: Song[] = [];
+  selectedSongId: number | null = null;
+  isPlayingCreative = false;
 
   get highScore(): number {
     return this.jumpingService.getHighScore();
@@ -66,13 +75,14 @@ export class JumpingComponent implements OnInit, AfterViewInit, OnDestroy {
   private soundVolume = 0.3;
 
   constructor(
-    private jumpingService: JumpingService,
+    public jumpingService: JumpingService, // 改为 public，让模板可以访问
     private ngZone: NgZone,
     private router: Router
   ) {}
 
   ngOnInit(): void {
     this.initAudio();
+    this.availableSongs = this.jumpingService.getAvailableSongs();
     this.gameSubscription = this.jumpingService.gameData$.subscribe(data => {
       this.gameData = data;
     });
@@ -355,7 +365,15 @@ export class JumpingComponent implements OnInit, AfterViewInit, OnDestroy {
     };
 
     const frequencies = chordFrequencies[color] || chordFrequencies['#4ECDC4'];
-    const duration = 0.4; // 和弦持续时间（稍长一点，更像琴声）
+    
+    // 根据游戏模式调整持续时间
+    let duration = 0.4;
+    if (this.gameData.gameMode === GameMode.SONG && this.gameData.currentSong) {
+      // 歌曲模式：根据BPM调整持续时间，让节奏更明显
+      const beatDuration = 60 / this.gameData.currentSong.bpm; // 每拍的时间
+      duration = beatDuration * 0.8; // 稍短一点，让下一个和弦能及时进入
+    }
+    
     const currentTime = this.audioContext.currentTime;
 
     // 同时播放和弦中的所有音符（真正的和弦效果）
@@ -381,6 +399,33 @@ export class JumpingComponent implements OnInit, AfterViewInit, OnDestroy {
       oscillator.start(currentTime);
       oscillator.stop(currentTime + duration);
     });
+  }
+
+  // 播放创作模式的序列
+  playCreativeSequence(): void {
+    const sequence = this.jumpingService.getCreativeSequence();
+    if (sequence.length === 0) {
+      alert('还没有创作序列！先跳跃一些平台吧！');
+      return;
+    }
+    
+    this.isPlayingCreative = true;
+    const beatDuration = 0.5; // 每个和弦的间隔
+    
+    sequence.forEach((color, index) => {
+      setTimeout(() => {
+        this.playPlatformChord(color);
+        if (index === sequence.length - 1) {
+          setTimeout(() => {
+            this.isPlayingCreative = false;
+          }, 500);
+        }
+      }, index * beatDuration * 1000);
+    });
+  }
+
+  clearCreativeSequence(): void {
+    this.jumpingService.setGameMode(GameMode.CREATIVE); // 这会清空序列
   }
 
   private createMeteorEffect(worldX: number, worldY: number, color: string): void {
@@ -722,6 +767,19 @@ export class JumpingComponent implements OnInit, AfterViewInit, OnDestroy {
     this.ctx.textAlign = 'right';
     this.ctx.fillText(`⏱️ ${timeString}`, width - 10, 55);
     
+    // 绘制游戏模式和歌曲信息
+    if (this.gameData.gameMode === GameMode.SONG && this.gameData.currentSong) {
+      this.ctx.font = '16px Arial';
+      this.ctx.fillText(`🎼 ${this.gameData.currentSong.name}`, width - 10, 80);
+      const progress = Math.floor((this.gameData.songProgress / this.gameData.currentSong.chordSequence.length) * 100);
+      this.ctx.fillText(`进度: ${progress}%`, width - 10, 100);
+    } else if (this.gameData.gameMode === GameMode.CREATIVE) {
+      this.ctx.font = '16px Arial';
+      this.ctx.fillText(`🎹 创作模式`, width - 10, 80);
+      const sequenceLength = this.jumpingService.getCreativeSequence().length;
+      this.ctx.fillText(`序列: ${sequenceLength}`, width - 10, 100);
+    }
+    
     // 绘制最高分
     const highScore = this.jumpingService.getHighScore();
     if (highScore > 0) {
@@ -768,6 +826,31 @@ export class JumpingComponent implements OnInit, AfterViewInit, OnDestroy {
 
   get gameState(): typeof GameState {
     return GameState;
+  }
+
+  get gameMode(): typeof GameMode {
+    return GameMode;
+  }
+
+  selectMode(mode: 'free' | 'song' | 'creative'): void {
+    if (mode === 'song') {
+      this.jumpingService.setGameMode(GameMode.SONG);
+      // 如果没有选择歌曲，默认选择第一首
+      if (!this.selectedSongId && this.availableSongs.length > 0) {
+        this.selectSong(this.availableSongs[0].id);
+      }
+    } else if (mode === 'creative') {
+      this.jumpingService.setGameMode(GameMode.CREATIVE);
+      this.selectedSongId = null;
+    } else {
+      this.jumpingService.setGameMode(GameMode.FREE);
+      this.selectedSongId = null;
+    }
+  }
+
+  selectSong(songId: number): void {
+    this.selectedSongId = songId;
+    this.jumpingService.setGameMode(GameMode.SONG, songId);
   }
 
   goHome(): void {

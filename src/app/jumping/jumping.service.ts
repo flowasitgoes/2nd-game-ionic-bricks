@@ -1,6 +1,13 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { JUMPING_CONFIG } from './jumping.config';
+import { Song, SONGS } from './jumping-songs.config';
+
+export enum GameMode {
+  FREE = 'free',           // 自由模式：随机平台，实时播放
+  SONG = 'song',           // 关卡模式：按歌曲序列生成
+  CREATIVE = 'creative'    // 创作模式：记录玩家跳跃序列
+}
 
 export enum GameState {
   MENU = 'menu',
@@ -40,6 +47,10 @@ export interface GameData {
   canvasHeight: number;
   maxHeight: number; // 曾经达到的最高高度
   fallDistance: number; // 当前坠落距离
+  gameMode: GameMode; // 游戏模式
+  currentSong: Song | null; // 当前歌曲（关卡模式）
+  creativeSequence: string[]; // 创作模式的序列记录
+  songProgress: number; // 歌曲进度（关卡模式）
 }
 
 export interface EffectEvent {
@@ -71,6 +82,10 @@ export class JumpingService {
     gameTime: 0,
     maxHeight: 0,
     fallDistance: 0,
+    gameMode: GameMode.FREE,
+    currentSong: null,
+    creativeSequence: [],
+    songProgress: 0,
     state: GameState.MENU,
     canvasWidth: 0,
     canvasHeight: 0
@@ -121,6 +136,10 @@ export class JumpingService {
     this.gameData.fallDistance = 0;
     this.gameData.gameTime = 0;
     this.gameData.state = GameState.MENU;
+    this.gameData.gameMode = GameMode.FREE;
+    this.gameData.currentSong = null;
+    this.gameData.creativeSequence = [];
+    this.gameData.songProgress = 0;
     this.previousHeight = 0;
     this.previousOnGround = false;
     this.effectEvents = [];
@@ -135,17 +154,105 @@ export class JumpingService {
     const platformY = canvasHeight - 100;
     
     // 起始平台（玩家站立的平台）
+    const startColor = this.gameData.gameMode === GameMode.SONG && this.gameData.currentSong
+      ? this.gameData.currentSong.chordSequence[0]
+      : JUMPING_CONFIG.platform.colors[0];
+    
     this.gameData.platforms.push({
       x: this.gameData.canvasWidth / 2 - 75,
       y: platformY,
       width: 150,
       height: JUMPING_CONFIG.platform.height,
-      color: JUMPING_CONFIG.platform.colors[0],
+      color: startColor,
       scored: false
     });
 
-    // 生成更多平台
-    this.generatePlatformsUpTo(canvasHeight + 2000);
+    // 根据游戏模式生成平台
+    if (this.gameData.gameMode === GameMode.SONG && this.gameData.currentSong) {
+      // 歌曲模式：按歌曲序列生成
+      this.generateSongPlatforms(canvasHeight + 2000);
+    } else {
+      // 自由模式和创作模式：随机生成
+      this.generatePlatformsUpTo(canvasHeight + 2000);
+    }
+  }
+
+  // 按歌曲序列生成平台
+  private generateSongPlatforms(maxY: number): void {
+    if (!this.gameData.currentSong) return;
+    
+    const song = this.gameData.currentSong;
+    const canvasHeight = this.gameData.canvasHeight;
+    const startY = canvasHeight - 100;
+    let currentY = startY;
+    let lastX = this.gameData.canvasWidth / 2; // 从起始平台中心开始
+    let chordIndex = 1; // 从第二个和弦开始（第一个是起始平台）
+    
+    // 让平台在左、中、右三个区域均匀分布
+    let referenceX = this.gameData.canvasWidth / 2; // 从屏幕中心开始
+    
+    // 生成歌曲序列的多个循环
+    const loops = Math.ceil((startY - maxY) / (song.chordSequence.length * 100));
+    
+    for (let loop = 0; loop < loops && currentY > maxY; loop++) {
+      for (let i = 0; i < song.chordSequence.length && currentY > maxY; i++) {
+        const gap = JUMPING_CONFIG.platform.minGap + 
+                    Math.random() * (JUMPING_CONFIG.platform.maxGap - JUMPING_CONFIG.platform.minGap);
+        currentY -= gap;
+        
+        const color = song.chordSequence[chordIndex % song.chordSequence.length];
+        // 平台宽度增加1.1倍
+        const baseWidth = JUMPING_CONFIG.platform.minWidth + 
+                     Math.random() * (JUMPING_CONFIG.platform.maxWidth - JUMPING_CONFIG.platform.minWidth);
+        const width = baseWidth * 1.1;
+        
+        // 让平台在左、中、右三个区域有更均匀的分布
+        const maxHorizontalJump = 120; // 最大水平跳跃距离
+        let targetX: number;
+        const random = Math.random();
+        
+        if (random < 0.4) {
+          // 40% 概率：基于上一个平台位置，在可跳范围内
+          const maxXOffset = Math.min(maxHorizontalJump, (this.gameData.canvasWidth - width) / 2);
+          const xOffset = (Math.random() - 0.5) * maxXOffset * 1.6;
+          targetX = referenceX + xOffset;
+        } else if (random < 0.7) {
+          // 30% 概率：随机选择屏幕左侧区域（0-33%）
+          targetX = Math.random() * (this.gameData.canvasWidth * 0.33);
+        } else {
+          // 30% 概率：随机选择屏幕右侧区域（67%-100%）
+          targetX = this.gameData.canvasWidth * 0.67 + Math.random() * (this.gameData.canvasWidth * 0.33);
+        }
+        
+        // 确保目标位置在屏幕内
+        targetX = Math.max(width / 2, Math.min(targetX, this.gameData.canvasWidth - width / 2));
+        
+        // 如果目标位置离上一个平台太远，调整到可跳范围内
+        const distanceFromReference = Math.abs(targetX - referenceX);
+        if (distanceFromReference > maxHorizontalJump) {
+          const direction = targetX > referenceX ? 1 : -1;
+          targetX = referenceX + direction * maxHorizontalJump * (0.5 + Math.random() * 0.5);
+          targetX = Math.max(width / 2, Math.min(targetX, this.gameData.canvasWidth - width / 2));
+        }
+        
+        let x = targetX - width / 2;
+        x = Math.max(0, Math.min(x, this.gameData.canvasWidth - width));
+        
+        this.gameData.platforms.push({
+          x,
+          y: currentY,
+          width,
+          height: JUMPING_CONFIG.platform.height,
+          color: color,
+          scored: false
+        });
+        
+        // 更新参考位置为当前平台中心
+        referenceX = x + width / 2;
+        
+        chordIndex++;
+      }
+    }
   }
 
   private generatePlatformsUpTo(maxY: number): void {
@@ -157,29 +264,62 @@ export class JumpingService {
     );
     
     let currentY = highestPlatform.y;
-    let lastX = highestPlatform.x + highestPlatform.width / 2; // 上一个平台的中心X
+    
+    // 改进：让平台在左、中、右三个区域均匀分布
+    // 基于上一个平台位置，但增加随机性，让平台可以往左、中、右延伸
+    const highestPlatformCenter = highestPlatform.x + highestPlatform.width / 2;
+    let referenceX = highestPlatformCenter;
+    
     let attempts = 0;
     const maxAttempts = 1000; // 防止无限循环
 
     while (currentY > maxY && attempts < maxAttempts) {
       attempts++;
       
-      // 计算最大可跳距离
-      const maxJumpDistance = 200;
-      
       // 保持间距在可跳范围内（60-120像素）
       const gap = JUMPING_CONFIG.platform.minGap + 
                   Math.random() * (JUMPING_CONFIG.platform.maxGap - JUMPING_CONFIG.platform.minGap);
       currentY -= gap;
 
-      // 确保新平台在可跳范围内
-      const width = JUMPING_CONFIG.platform.minWidth + 
+      // 确保新平台在可跳范围内，宽度增加1.1倍
+      const baseWidth = JUMPING_CONFIG.platform.minWidth + 
                    Math.random() * (JUMPING_CONFIG.platform.maxWidth - JUMPING_CONFIG.platform.minWidth);
+      const width = baseWidth * 1.1; // 平台宽度增加1.1倍
       
-      // 计算新平台的位置，确保在可跳范围内
-      const maxXOffset = Math.min(maxJumpDistance, this.gameData.canvasWidth - width);
-      const xOffset = (Math.random() - 0.5) * maxXOffset * 0.8;
-      let x = lastX - width / 2 + xOffset;
+      // 计算最大可跳水平距离
+      const maxHorizontalJump = 120; // 最大水平跳跃距离
+      
+      // 让平台在左、中、右三个区域有更均匀的分布
+      // 随机决定是保持在上一个平台附近，还是随机选择屏幕的左、中、右区域
+      let targetX: number;
+      const random = Math.random();
+      
+      if (random < 0.4) {
+        // 40% 概率：基于上一个平台位置，在可跳范围内
+        const maxXOffset = Math.min(maxHorizontalJump, (this.gameData.canvasWidth - width) / 2);
+        const xOffset = (Math.random() - 0.5) * maxXOffset * 1.6;
+        targetX = referenceX + xOffset;
+      } else if (random < 0.7) {
+        // 30% 概率：随机选择屏幕左侧区域（0-33%）
+        targetX = Math.random() * (this.gameData.canvasWidth * 0.33);
+      } else {
+        // 30% 概率：随机选择屏幕右侧区域（67%-100%）
+        targetX = this.gameData.canvasWidth * 0.67 + Math.random() * (this.gameData.canvasWidth * 0.33);
+      }
+      
+      // 确保目标位置在屏幕内，并考虑平台宽度
+      targetX = Math.max(width / 2, Math.min(targetX, this.gameData.canvasWidth - width / 2));
+      
+      // 如果目标位置离上一个平台太远，调整到可跳范围内
+      const distanceFromReference = Math.abs(targetX - referenceX);
+      if (distanceFromReference > maxHorizontalJump) {
+        // 如果太远，在可跳范围内随机选择
+        const direction = targetX > referenceX ? 1 : -1;
+        targetX = referenceX + direction * maxHorizontalJump * (0.5 + Math.random() * 0.5);
+        targetX = Math.max(width / 2, Math.min(targetX, this.gameData.canvasWidth - width / 2));
+      }
+      
+      let x = targetX - width / 2;
       
       // 确保平台在屏幕内
       x = Math.max(0, Math.min(x, this.gameData.canvasWidth - width));
@@ -229,7 +369,8 @@ export class JumpingService {
       };
       
       this.gameData.platforms.push(newPlatform);
-      lastX = x + width / 2; // 更新上一个平台中心
+      // 更新参考位置为当前平台中心
+      referenceX = x + width / 2;
     }
   }
 
@@ -272,7 +413,8 @@ export class JumpingService {
       // 生成连续平台，直到玩家下方足够距离
       const targetY = playerBottom + canvasHeight * 2; // 生成到玩家下方2倍屏幕高度
       let currentY = startY;
-      let lastX = startX;
+      const playerCenterX = player.x + player.width / 2; // 玩家中心X
+      let referenceX = startX; // 初始参考位置
       let platformCount = 0;
       const maxPlatforms = 20; // 最多生成20个平台，防止无限循环
       
@@ -284,15 +426,41 @@ export class JumpingService {
                     Math.random() * (JUMPING_CONFIG.platform.maxGap - JUMPING_CONFIG.platform.minGap);
         currentY += gap;
         
-        // 确保新平台在可跳范围内
-        const width = JUMPING_CONFIG.platform.minWidth + 
+        // 确保新平台在可跳范围内，宽度增加1.1倍
+        const baseWidth = JUMPING_CONFIG.platform.minWidth + 
                      Math.random() * (JUMPING_CONFIG.platform.maxWidth - JUMPING_CONFIG.platform.minWidth);
+        const width = baseWidth * 1.1; // 平台宽度增加1.1倍
         
-        // 计算新平台的位置，确保在可跳范围内（基于上一个平台）
-        const maxJumpDistance = 200;
-        const maxXOffset = Math.min(maxJumpDistance, this.gameData.canvasWidth - width);
-        const xOffset = (Math.random() - 0.5) * maxXOffset * 0.8;
-        let x = lastX - width / 2 + xOffset;
+        // 让平台在左、中、右三个区域有更均匀的分布
+        const maxHorizontalJump = 120; // 最大水平跳跃距离
+        let targetX: number;
+        const random = Math.random();
+        
+        if (random < 0.4) {
+          // 40% 概率：基于上一个平台位置，在可跳范围内
+          const maxXOffset = Math.min(maxHorizontalJump, (this.gameData.canvasWidth - width) / 2);
+          const xOffset = (Math.random() - 0.5) * maxXOffset * 1.6;
+          targetX = referenceX + xOffset;
+        } else if (random < 0.7) {
+          // 30% 概率：随机选择屏幕左侧区域（0-33%）
+          targetX = Math.random() * (this.gameData.canvasWidth * 0.33);
+        } else {
+          // 30% 概率：随机选择屏幕右侧区域（67%-100%）
+          targetX = this.gameData.canvasWidth * 0.67 + Math.random() * (this.gameData.canvasWidth * 0.33);
+        }
+        
+        // 确保目标位置在屏幕内
+        targetX = Math.max(width / 2, Math.min(targetX, this.gameData.canvasWidth - width / 2));
+        
+        // 如果目标位置离上一个平台太远，调整到可跳范围内
+        const distanceFromReference = Math.abs(targetX - referenceX);
+        if (distanceFromReference > maxHorizontalJump) {
+          const direction = targetX > referenceX ? 1 : -1;
+          targetX = referenceX + direction * maxHorizontalJump * (0.5 + Math.random() * 0.5);
+          targetX = Math.max(width / 2, Math.min(targetX, this.gameData.canvasWidth - width / 2));
+        }
+        
+        let x = targetX - width / 2;
         
         // 确保平台在屏幕内
         x = Math.max(0, Math.min(x, this.gameData.canvasWidth - width));
@@ -339,7 +507,8 @@ export class JumpingService {
         };
         
         this.gameData.platforms.push(newPlatform);
-        lastX = x + width / 2; // 更新上一个平台中心
+        // 更新参考位置为当前平台中心
+        referenceX = x + width / 2;
       }
     }
   }
@@ -356,12 +525,50 @@ export class JumpingService {
     this.jumpPressed = jumping;
   }
 
+  setGameMode(mode: GameMode, songId?: number): void {
+    this.gameData.gameMode = mode;
+    if (mode === GameMode.SONG && songId) {
+      this.gameData.currentSong = SONGS.find(s => s.id === songId) || null;
+      this.gameData.songProgress = 0;
+    } else if (mode === GameMode.CREATIVE) {
+      // 清空创作序列
+      this.gameData.creativeSequence = [];
+    } else {
+      this.gameData.currentSong = null;
+      this.gameData.songProgress = 0;
+    }
+    this.notify();
+  }
+
+  getCreativeSequence(): string[] {
+    return this.gameData.creativeSequence;
+  }
+
   startGame(): void {
     if (this.gameData.state === GameState.MENU || this.gameData.state === GameState.GAME_OVER) {
+      // 保存当前模式，resetGame会重置，需要恢复
+      const currentMode = this.gameData.gameMode;
+      const currentSong = this.gameData.currentSong;
+      const currentSongId = currentSong ? currentSong.id : undefined;
+      
       this.resetGame();
+      
+      // 恢复游戏模式
+      this.gameData.gameMode = currentMode;
+      if (currentMode === GameMode.SONG && currentSongId) {
+        this.gameData.currentSong = SONGS.find(s => s.id === currentSongId) || null;
+        this.gameData.songProgress = 0;
+      } else if (currentMode === GameMode.CREATIVE) {
+        this.gameData.creativeSequence = [];
+      }
+      
       this.gameData.state = GameState.PLAYING;
       this.notify();
     }
+  }
+
+  getAvailableSongs(): Song[] {
+    return SONGS;
   }
 
   pauseGame(): void {
@@ -484,14 +691,20 @@ export class JumpingService {
     // 生成玩家下方的平台（安全网）
     this.generatePlatformsBelow();
     
-    // 生成新平台（向上）- 只生成一次，避免重复
+    // 生成新平台（向上）- 根据游戏模式选择生成方式
     const lowestPlatform = this.gameData.platforms.length > 0 
       ? Math.min(...this.gameData.platforms.map(p => p.y))
       : this.gameData.cameraY;
     
     // 只在需要时生成新平台（距离相机一定范围）
     if (lowestPlatform > this.gameData.cameraY - this.gameData.canvasHeight * 0.5) {
-      this.generatePlatformsUpTo(lowestPlatform - 800); // 生成更多平台
+      if (this.gameData.gameMode === GameMode.SONG && this.gameData.currentSong) {
+        // 歌曲模式：继续按序列生成
+        this.generateSongPlatforms(lowestPlatform - 800);
+      } else {
+        // 自由模式和创作模式：随机生成
+        this.generatePlatformsUpTo(lowestPlatform - 800);
+      }
     }
     
     // 如果玩家在向下移动，在其上方生成平台（让玩家可以跳回去）
@@ -607,6 +820,25 @@ export class JumpingService {
             y: platform.y,
             timestamp: this.gameData.gameTime
           });
+          
+          // 创作模式：记录跳跃序列
+          if (this.gameData.gameMode === GameMode.CREATIVE) {
+            this.gameData.creativeSequence.push(platform.color);
+          }
+          
+          // 歌曲模式：检查进度
+          if (this.gameData.gameMode === GameMode.SONG && this.gameData.currentSong) {
+            const expectedColor = this.gameData.currentSong.chordSequence[
+              this.gameData.songProgress % this.gameData.currentSong.chordSequence.length
+            ];
+            if (platform.color === expectedColor) {
+              this.gameData.songProgress++;
+              // 如果完成一轮，给额外奖励
+              if (this.gameData.songProgress % this.gameData.currentSong.chordSequence.length === 0) {
+                this.gameData.score += 50; // 完成一轮歌曲的额外分数
+              }
+            }
+          }
           
           // 如果坠落超过500米后重新站到平台，触发彩虹鼓励特效
           if (this.gameData.fallDistance > 500) {

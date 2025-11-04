@@ -6,6 +6,68 @@
     <div class="menu-content">
       <h1>🧗 跳躍平台遊戲</h1>
       <p class="game-description">控制角色不断往上跳跃，踩平台得分！</p>
+      
+      <!-- 游戏模式选择 -->
+      <div class="mode-selection">
+        <h3>选择游戏模式：</h3>
+        
+        <!-- 自由模式 -->
+        <div class="mode-option" (click)="selectMode('free')">
+          <input type="radio" name="mode" [checked]="gameData.gameMode === 'free'" (click)="selectMode('free')">
+          <label>
+            <strong>🎵 自由模式</strong>
+            <span>随机平台，自由跳跃，实时播放和弦</span>
+          </label>
+        </div>
+        
+        <!-- 歌曲模式 -->
+        <div class="mode-option" (click)="selectMode('song')">
+          <input type="radio" name="mode" [checked]="gameData.gameMode === 'song'" (click)="selectMode('song')">
+          <label>
+            <strong>🎼 关卡模式</strong>
+            <span>按歌曲序列生成平台，完成歌曲获得高分</span>
+          </label>
+        </div>
+        
+        <!-- 创作模式 -->
+        <div class="mode-option" (click)="selectMode('creative')">
+          <input type="radio" name="mode" [checked]="gameData.gameMode === 'creative'" (click)="selectMode('creative')">
+          <label>
+            <strong>🎹 创作模式</strong>
+            <span>记录你的跳跃序列，创作属于自己的旋律</span>
+          </label>
+        </div>
+        
+        <!-- 歌曲选择（仅在歌曲模式显示） -->
+        <div class="song-selection" *ngIf="gameData.gameMode === 'song'">
+          <h4>选择歌曲：</h4>
+          <div class="song-list">
+            <div 
+              *ngFor="let song of availableSongs" 
+              class="song-item"
+              [class.selected]="selectedSongId === song.id"
+              (click)="selectSong(song.id)">
+              <strong>{{ song.name }}</strong>
+              <span>{{ song.description }}</span>
+              <span class="difficulty">难度: {{ song.difficulty === 'easy' ? '简单' : song.difficulty === 'medium' ? '中等' : '困难' }}</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 创作模式控制 -->
+        <div class="creative-controls" *ngIf="gameData.gameMode === 'creative'">
+          <p>已记录: {{ jumpingService.getCreativeSequence().length }} 个和弦</p>
+          <div class="creative-buttons">
+            <button class="play-button" (click)="playCreativeSequence()" [disabled]="isPlayingCreative || jumpingService.getCreativeSequence().length === 0">
+              {{ isPlayingCreative ? '播放中...' : '播放序列' }}
+            </button>
+            <button class="clear-button" (click)="clearCreativeSequence()" [disabled]="jumpingService.getCreativeSequence().length === 0">
+              清除序列
+            </button>
+          </div>
+        </div>
+      </div>
+      
       <div class="controls-info">
         <p><strong>操作方式：</strong></p>
         <ul>
@@ -17,10 +79,15 @@
           <li>快速点击：跳跃</li>
         </ul>
       </div>
-      <button class="start-button" (click)="startGame()">开始游戏</button>
+      
+      <button class="start-button" (click)="startGame()" [disabled]="gameData.gameMode === 'song' && !selectedSongId">
+        {{ gameData.gameMode === 'song' && !selectedSongId ? '请先选择歌曲' : '开始游戏' }}
+      </button>
+      
       <div class="high-score" *ngIf="highScore > 0">
         <p>最高高度: {{ highScore | number:'1.0-0' }}m</p>
       </div>
+      
       <button class="home-button" (click)="goHome()">返回主页</button>
     </div>
   </div>
