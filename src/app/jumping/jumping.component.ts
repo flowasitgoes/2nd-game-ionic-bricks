@@ -59,6 +59,11 @@ export class JumpingComponent implements OnInit, AfterViewInit, OnDestroy {
   // 特效系统
   private meteorLines: MeteorLine[] = [];
   private rainbowRings: RainbowRing[] = [];
+  
+  // 音频系统
+  private audioContext: AudioContext | null = null;
+  private soundsEnabled = true;
+  private soundVolume = 0.3;
 
   constructor(
     private jumpingService: JumpingService,
@@ -67,9 +72,18 @@ export class JumpingComponent implements OnInit, AfterViewInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    this.initAudio();
     this.gameSubscription = this.jumpingService.gameData$.subscribe(data => {
       this.gameData = data;
     });
+  }
+
+  private initAudio(): void {
+    try {
+      this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    } catch (e) {
+      console.warn('Web Audio API not supported');
+    }
   }
 
   ngAfterViewInit(): void {
@@ -96,6 +110,10 @@ export class JumpingComponent implements OnInit, AfterViewInit, OnDestroy {
     }
     if (this.keyHandlers['keyup']) {
       window.removeEventListener('keyup', this.keyHandlers['keyup']);
+    }
+    
+    if (this.audioContext) {
+      this.audioContext.close();
     }
   }
 
@@ -314,11 +332,55 @@ export class JumpingComponent implements OnInit, AfterViewInit, OnDestroy {
         this.createMeteorEffect(event.x, event.y, event.platformColor || '#FFD93D');
       } else if (event.type === 'rainbow_encourage') {
         this.createRainbowRing(event.x, event.y);
+      } else if (event.type === 'platform_sound') {
+        // 播放平台对应的和弦音效
+        this.playPlatformChord(event.platformColor || '#4ECDC4');
       }
     }
     
     // 清除已处理的事件
     this.jumpingService.clearEffectEvents();
+  }
+
+  private playPlatformChord(color: string): void {
+    if (!this.soundsEnabled || !this.audioContext) return;
+
+    // 和弦频率映射（基于 A4 = 440Hz）
+    const chordFrequencies: { [key: string]: number[] } = {
+      '#4ECDC4': [261.63, 329.63, 392.00, 493.88], // Cmaj7 - 青色：冷静、平衡、开阔
+      '#FF6B6B': [440.00, 523.25, 659.25, 783.99], // Am7 - 红色：热情、能量
+      '#FFD93D': [392.00, 493.88, 587.33],         // G - 黄色：光亮、活泼、温暖
+      '#95E1D3': [349.23, 440.00, 523.25, 659.25], // Fmaj7 - 浅青色：纯净、梦幻
+      '#FFA07A': [293.66, 349.23, 440.00, 523.25]  // Dm7 - 橘色：亲切、浪漫
+    };
+
+    const frequencies = chordFrequencies[color] || chordFrequencies['#4ECDC4'];
+    const duration = 0.4; // 和弦持续时间（稍长一点，更像琴声）
+    const currentTime = this.audioContext.currentTime;
+
+    // 同时播放和弦中的所有音符（真正的和弦效果）
+    frequencies.forEach((freq, index) => {
+      if (!this.audioContext) return;
+      
+      const oscillator = this.audioContext.createOscillator();
+      const gainNode = this.audioContext.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(this.audioContext.destination);
+
+      oscillator.frequency.value = freq;
+      oscillator.type = 'sine'; // 使用正弦波，更柔和，像钢琴/琴声
+
+      // 音量设置：根音稍大，其他音稍小，让和弦更自然
+      const baseVolume = this.soundVolume * 0.2;
+      const volume = index === 0 ? baseVolume : baseVolume * 0.8; // 根音稍大
+      
+      gainNode.gain.setValueAtTime(volume, currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, currentTime + duration);
+
+      oscillator.start(currentTime);
+      oscillator.stop(currentTime + duration);
+    });
   }
 
   private createMeteorEffect(worldX: number, worldY: number, color: string): void {
