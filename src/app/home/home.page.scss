@@ -1,0 +1,8 @@
+// 游戏组件会处理自己的样式
+ion-content {
+  --background: #1a1a2e;
+  
+  &::part(scroll) {
+    touch-action: none;
+  }
+}

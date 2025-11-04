@@ -1,0 +1,34 @@
+<div class="game-container">
+  <canvas #gameCanvas class="game-canvas" (click)="togglePause()"></canvas>
+  
+  <!-- 菜单界面 -->
+  <div class="menu-overlay" *ngIf="gameData.state === gameState.MENU">
+    <div class="menu-content">
+      <h1>打砖块</h1>
+      <p class="high-score">最高分: {{ getHighScore() }}</p>
+      <ion-button expand="block" (click)="startGame()">开始游戏</ion-button>
+    </div>
+  </div>
+
+  <!-- 游戏结束界面 -->
+  <div class="menu-overlay" *ngIf="gameData.state === gameState.GAME_OVER">
+    <div class="menu-content">
+      <h1>游戏结束</h1>
+      <p class="final-score">最终分数: {{ gameData.score }}</p>
+      <p class="high-score" *ngIf="gameData.score > getHighScore()">新纪录！</p>
+      <p class="high-score" *ngIf="gameData.score <= getHighScore()">最高分: {{ getHighScore() }}</p>
+      <ion-button expand="block" (click)="startGame()">重新开始</ion-button>
+    </div>
+  </div>
+
+  <!-- 胜利界面 -->
+  <div class="menu-overlay" *ngIf="gameData.state === gameState.VICTORY">
+    <div class="menu-content">
+      <h1>恭喜通关！</h1>
+      <p class="final-score">最终分数: {{ gameData.score }}</p>
+      <p class="high-score">最高分: {{ getHighScore() }}</p>
+      <ion-button expand="block" (click)="startGame()">重新开始</ion-button>
+    </div>
+  </div>
+</div>
+
