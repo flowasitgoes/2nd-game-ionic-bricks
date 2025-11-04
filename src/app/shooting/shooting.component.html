@@ -1,0 +1,76 @@
+<div class="game-container">
+  <div #gameArea class="game-area" [class.playing]="gameState === GameState.PLAYING">
+    <!-- 游戏信息显示 -->
+    <div class="game-info" *ngIf="gameState === GameState.PLAYING">
+      <div class="info-item">
+        <span class="label">分数:</span>
+        <span class="value">{{ score }}</span>
+      </div>
+      <div class="info-item">
+        <span class="label">时间:</span>
+        <span class="value time" [class.warning]="timeLeft <= 10">{{ timeLeft }}s</span>
+      </div>
+    </div>
+
+    <!-- 靶子 -->
+    <div
+      *ngFor="let target of targets; trackBy: trackByTargetId"
+      class="target"
+      [class.hit]="target.hit"
+      [class.visible]="target.visible && !target.hit"
+      [style.left.px]="target.x"
+      [style.top.px]="target.y"
+      [style.width.px]="target.size"
+      [style.height.px]="target.size"
+      (click)="onTargetClick(target, $event)"
+    >
+      <div class="target-rings">
+        <div class="ring ring-1"></div>
+        <div class="ring ring-2"></div>
+        <div class="ring ring-3"></div>
+        <div class="ring ring-4"></div>
+      </div>
+      <div class="target-center"></div>
+    </div>
+
+    <!-- 击中效果 -->
+    <div
+      *ngFor="let effect of hitEffects"
+      class="hit-effect"
+      [style.left.px]="effect.x"
+      [style.top.px]="effect.y"
+      [style.opacity]="effect.life / effect.maxLife"
+    >
+      <div class="explosion"></div>
+      <div class="score-popup">+10</div>
+    </div>
+  </div>
+
+  <!-- 菜单界面 -->
+  <div class="menu-overlay" *ngIf="gameState === GameState.MENU">
+    <div class="menu-content">
+      <h1>🎯 射擊靶場</h1>
+      <p class="story-text">點擊靶子射擊得分！<br/>瞄準目標，展現你的射擊技巧！</p>
+      <p class="high-score">最高記錄: {{ getHighScore() }} 分</p>
+      <ion-button expand="block" (click)="startGame()">開始射擊</ion-button>
+      <ion-button expand="block" fill="outline" (click)="goHome()" style="margin-top: 1rem;">
+        返回主页
+      </ion-button>
+    </div>
+  </div>
+
+  <!-- 游戏结束界面 -->
+  <div class="menu-overlay" *ngIf="gameState === GameState.GAME_OVER">
+    <div class="menu-content">
+      <h1>🏁 遊戲結束</h1>
+      <p class="final-score">最終得分: {{ score }} 分</p>
+      <p class="high-score" *ngIf="score > getHighScore()">🎉 新紀錄！</p>
+      <p class="high-score" *ngIf="score <= getHighScore()">最高記錄: {{ getHighScore() }} 分</p>
+      <ion-button expand="block" (click)="restartGame()">再試一次</ion-button>
+      <ion-button expand="block" fill="outline" (click)="goHome()" style="margin-top: 1rem;">
+        返回主页
+      </ion-button>
+    </div>
+  </div>
+</div>
+

@@ -8,6 +8,9 @@
       <p class="story-text">小精灵饿坏了！<br/>帮助它吃掉所有美味的蛋糕吧！</p>
       <p class="high-score">最高记录: {{ getHighScore() }} 个蛋糕</p>
       <ion-button expand="block" (click)="startGame()">开始吃蛋糕！</ion-button>
+      <ion-button expand="block" fill="outline" (click)="goHome()" style="margin-top: 1rem;">
+        返回主页
+      </ion-button>
     </div>
   </div>
 
@@ -19,6 +22,9 @@
       <p class="high-score" *ngIf="gameData.score > getHighScore()">🎉 新纪录！</p>
       <p class="high-score" *ngIf="gameData.score <= getHighScore()">最高记录: {{ getHighScore() }} 个</p>
       <ion-button expand="block" (click)="startGame()">再试一次</ion-button>
+      <ion-button expand="block" fill="outline" (click)="goHome()" style="margin-top: 1rem;">
+        返回主页
+      </ion-button>
     </div>
   </div>
 
@@ -30,6 +36,9 @@
       <p class="final-score">总共吃了 {{ gameData.score }} 个蛋糕</p>
       <p class="high-score">最高记录: {{ getHighScore() }}</p>
       <ion-button expand="block" (click)="startGame()">再来一轮</ion-button>
+      <ion-button expand="block" fill="outline" (click)="goHome()" style="margin-top: 1rem;">
+        返回主页
+      </ion-button>
     </div>
   </div>
 </div>

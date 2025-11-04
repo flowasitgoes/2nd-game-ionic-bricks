@@ -1,3 +1,49 @@
 <ion-content [fullscreen]="true">
-  <app-game></app-game>
+  <div class="game-selection">
+    <div class="selection-header">
+      <h1>🎮 游戏中心</h1>
+      <p>选择你想玩的游戏</p>
+    </div>
+    
+    <div class="game-cards">
+      <ion-card class="game-card" (click)="navigateToGame('breakout')">
+        <ion-card-header>
+          <ion-card-title>🍰 蛋糕大冒险</ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <p>经典的打砖块游戏，帮助小精灵吃掉所有美味的蛋糕！</p>
+          <div class="game-features">
+            <span>🎯 关卡挑战</span>
+            <span>⭐ 高分记录</span>
+          </div>
+        </ion-card-content>
+      </ion-card>
+
+      <ion-card class="game-card" (click)="navigateToGame('rhythm')">
+        <ion-card-header>
+          <ion-card-title>🎵 音乐节奏</ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <p>根据节拍按下对应按键，展现你的音乐天赋！</p>
+          <div class="game-features">
+            <span>🎶 节奏挑战</span>
+            <span>🏆 评级系统</span>
+          </div>
+        </ion-card-content>
+      </ion-card>
+
+      <ion-card class="game-card" (click)="navigateToGame('shooting')">
+        <ion-card-header>
+          <ion-card-title>🎯 射击靶场</ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <p>靶子随机出现，点击射击得分！展现你的瞄准技巧！</p>
+          <div class="game-features">
+            <span>🎯 精准射击</span>
+            <span>⏱️ 时间挑战</span>
+          </div>
+        </ion-card-content>
+      </ion-card>
+    </div>
+  </div>
 </ion-content>

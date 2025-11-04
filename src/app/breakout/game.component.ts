@@ -1,4 +1,5 @@
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit, NgZone } from '@angular/core';
+import { Router } from '@angular/router';
 import { GameService, GameState } from './game.service';
 import { Subscription } from 'rxjs';
 import { GAME_CONFIG } from './game.config';
@@ -64,7 +65,8 @@ export class GameComponent implements OnInit, AfterViewInit, OnDestroy {
 
   constructor(
     private gameService: GameService,
-    private ngZone: NgZone
+    private ngZone: NgZone,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
@@ -1073,6 +1075,10 @@ export class GameComponent implements OnInit, AfterViewInit, OnDestroy {
 
   get gameState(): typeof GameState {
     return GameState;
+  }
+
+  goHome(): void {
+    this.router.navigate(['/home']);
   }
 }
 

@@ -7,6 +7,18 @@ const routes: Routes = [
     loadChildren: () => import('./home/home.module').then( m => m.HomePageModule)
   },
   {
+    path: 'breakout',
+    loadChildren: () => import('./breakout/breakout.module').then( m => m.BreakoutModule)
+  },
+  {
+    path: 'rhythm',
+    loadChildren: () => import('./rhythm/rhythm.module').then( m => m.RhythmModule)
+  },
+  {
+    path: 'shooting',
+    loadChildren: () => import('./shooting/shooting.module').then( m => m.ShootingModule)
+  },
+  {
     path: '',
     redirectTo: 'home',
     pathMatch: 'full'
