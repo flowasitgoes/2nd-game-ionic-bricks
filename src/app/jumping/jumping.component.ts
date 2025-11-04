@@ -1,8 +1,28 @@
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit, NgZone } from '@angular/core';
 import { Router } from '@angular/router';
-import { JumpingService, GameState } from './jumping.service';
+import { JumpingService, GameState, EffectEvent } from './jumping.service';
 import { Subscription } from 'rxjs';
 import { JUMPING_CONFIG } from './jumping.config';
+
+interface MeteorLine {
+  x: number;
+  y: number;
+  length: number;
+  angle: number;
+  speed: number;
+  life: number;
+  maxLife: number;
+  color: string;
+}
+
+interface RainbowRing {
+  x: number;
+  y: number;
+  radius: number;
+  life: number;
+  maxLife: number;
+  rotation: number;
+}
 
 @Component({
   selector: 'app-jumping',
@@ -35,6 +55,10 @@ export class JumpingComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private keysPressed: Set<string> = new Set();
   private keyHandlers: { [key: string]: (e: KeyboardEvent) => void } = {};
+  
+  // 特效系统
+  private meteorLines: MeteorLine[] = [];
+  private rainbowRings: RainbowRing[] = [];
 
   constructor(
     private jumpingService: JumpingService,
@@ -273,7 +297,81 @@ export class JumpingComponent implements OnInit, AfterViewInit, OnDestroy {
   private update(): void {
     if (this.gameData.state === GameState.PLAYING) {
       this.jumpingService.update();
+      
+      // 处理特效事件
+      this.processEffectEvents();
     }
+    
+    // 更新特效
+    this.updateEffects();
+  }
+
+  private processEffectEvents(): void {
+    const events = this.jumpingService.getEffectEvents();
+    
+    for (const event of events) {
+      if (event.type === 'platform_land') {
+        this.createMeteorEffect(event.x, event.y, event.platformColor || '#FFD93D');
+      } else if (event.type === 'rainbow_encourage') {
+        this.createRainbowRing(event.x, event.y);
+      }
+    }
+    
+    // 清除已处理的事件
+    this.jumpingService.clearEffectEvents();
+  }
+
+  private createMeteorEffect(worldX: number, worldY: number, color: string): void {
+    // 使用世界坐标，在渲染时转换
+    // 创建流星线条（平行线效果，像流星一样）
+    const lineCount = 12; // 增加线条数量，更像流星
+    for (let i = 0; i < lineCount; i++) {
+      const angle = (Math.PI * 2 * i) / lineCount;
+      const length = 80 + Math.random() * 60;
+      const speed = 4 + Math.random() * 3;
+      
+      this.meteorLines.push({
+        x: worldX, // 世界坐标
+        y: worldY, // 世界坐标
+        length,
+        angle,
+        speed,
+        life: 1.0,
+        maxLife: 1.0,
+        color: color
+      });
+    }
+  }
+
+  private createRainbowRing(worldX: number, worldY: number): void {
+    // 使用世界坐标
+    this.rainbowRings.push({
+      x: worldX,
+      y: worldY,
+      radius: 20,
+      life: 1.0,
+      maxLife: 2.0, // 彩虹光圈持续时间更长
+      rotation: 0
+    });
+  }
+
+  private updateEffects(): void {
+    // 更新流星线条（世界坐标移动）
+    this.meteorLines = this.meteorLines.filter(line => {
+      line.life -= 0.05;
+      // 线条在世界坐标中移动
+      line.x += Math.cos(line.angle) * line.speed;
+      line.y += Math.sin(line.angle) * line.speed;
+      return line.life > 0;
+    });
+    
+    // 更新彩虹光圈（世界坐标中保持位置，但半径和旋转会变化）
+    this.rainbowRings = this.rainbowRings.filter(ring => {
+      ring.life -= 0.02;
+      ring.radius += 2;
+      ring.rotation += 0.15; // 旋转速度
+      return ring.life > 0;
+    });
   }
 
   private render(): void {
@@ -301,8 +399,101 @@ export class JumpingComponent implements OnInit, AfterViewInit, OnDestroy {
     // 绘制玩家
     this.drawPlayer();
 
+    // 绘制特效
+    this.drawEffects();
+
     // 绘制 UI
     this.drawUI();
+  }
+
+  private drawEffects(): void {
+    if (!this.ctx) return;
+    
+    const cameraY = this.gameData.cameraY || 0;
+    
+    // 绘制流星线条特效
+    for (const line of this.meteorLines) {
+      const screenX = line.x;
+      const screenY = line.y - cameraY;
+      const alpha = line.life / line.maxLife;
+      
+      // 创建渐变色
+      const gradient = this.ctx.createLinearGradient(
+        screenX, screenY,
+        screenX + Math.cos(line.angle) * line.length,
+        screenY + Math.sin(line.angle) * line.length
+      );
+      
+      // 根据平台颜色设置渐变
+      if (line.color === '#FFD93D' || line.color === '#FFA07A') {
+        // 黄色或橘色平台
+        const baseColor = line.color === '#FFD93D' ? '#FFD93D' : '#FFA07A';
+        gradient.addColorStop(0, line.color);
+        gradient.addColorStop(0.5, this.lightenColor(line.color, 0.3));
+        gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+      } else {
+        gradient.addColorStop(0, line.color);
+        gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+      }
+      
+      this.ctx.save();
+      this.ctx.globalAlpha = alpha;
+      this.ctx.strokeStyle = gradient;
+      this.ctx.lineWidth = 3;
+      this.ctx.lineCap = 'round';
+      this.ctx.beginPath();
+      this.ctx.moveTo(screenX, screenY);
+      this.ctx.lineTo(
+        screenX + Math.cos(line.angle) * line.length,
+        screenY + Math.sin(line.angle) * line.length
+      );
+      this.ctx.stroke();
+      this.ctx.restore();
+    }
+    
+    // 绘制彩虹光圈特效
+    for (const ring of this.rainbowRings) {
+      const screenX = ring.x;
+      const screenY = ring.y - cameraY;
+      const alpha = ring.life / ring.maxLife;
+      
+      this.ctx.save();
+      this.ctx.globalAlpha = alpha;
+      this.ctx.translate(screenX, screenY);
+      this.ctx.rotate(ring.rotation);
+      
+      // 绘制彩虹色光圈（多个同心圆）
+      const colors = ['#FF0000', '#FF7F00', '#FFFF00', '#00FF00', '#0000FF', '#4B0082', '#9400D3'];
+      for (let i = 0; i < 3; i++) {
+        const currentRadius = ring.radius + i * 15;
+        const colorIndex = Math.floor((ring.rotation * 10 + i) % colors.length);
+        
+        // 创建彩虹渐变
+        const ringGradient = this.ctx.createLinearGradient(-currentRadius, 0, currentRadius, 0);
+        for (let j = 0; j < colors.length; j++) {
+          ringGradient.addColorStop(j / colors.length, colors[(colorIndex + j) % colors.length]);
+        }
+        
+        this.ctx.strokeStyle = ringGradient;
+        this.ctx.lineWidth = 4 - i;
+        this.ctx.beginPath();
+        this.ctx.arc(0, 0, currentRadius, 0, Math.PI * 2);
+        this.ctx.stroke();
+      }
+      
+      this.ctx.restore();
+    }
+  }
+
+  private lightenColor(color: string, amount: number): string {
+    // 简单的颜色变亮函数
+    if (color.startsWith('#')) {
+      const r = parseInt(color.slice(1, 3), 16);
+      const g = parseInt(color.slice(3, 5), 16);
+      const b = parseInt(color.slice(5, 7), 16);
+      return `rgb(${Math.min(255, Math.floor(r + (255 - r) * amount))}, ${Math.min(255, Math.floor(g + (255 - g) * amount))}, ${Math.min(255, Math.floor(b + (255 - b) * amount))})`;
+    }
+    return color;
   }
 
   private drawBackground(width: number, height: number): void {

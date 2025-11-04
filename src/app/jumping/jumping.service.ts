@@ -38,6 +38,16 @@ export interface GameData {
   state: GameState;
   canvasWidth: number;
   canvasHeight: number;
+  maxHeight: number; // 曾经达到的最高高度
+  fallDistance: number; // 当前坠落距离
+}
+
+export interface EffectEvent {
+  type: 'platform_land' | 'rainbow_encourage';
+  platformColor?: string;
+  x: number;
+  y: number;
+  timestamp: number;
 }
 
 @Injectable({
@@ -59,10 +69,16 @@ export class JumpingService {
     score: 0,
     height: 0,
     gameTime: 0,
+    maxHeight: 0,
+    fallDistance: 0,
     state: GameState.MENU,
     canvasWidth: 0,
     canvasHeight: 0
   };
+
+  private effectEvents: EffectEvent[] = [];
+  private previousHeight: number = 0;
+  private previousOnGround: boolean = false;
 
   private gameDataSubject = new BehaviorSubject<GameData>(this.gameData);
   public gameData$: Observable<GameData> = this.gameDataSubject.asObservable();
@@ -101,8 +117,13 @@ export class JumpingService {
     this.gameData.cameraY = 0;
     this.gameData.score = 0;
     this.gameData.height = 0;
+    this.gameData.maxHeight = 0;
+    this.gameData.fallDistance = 0;
     this.gameData.gameTime = 0;
     this.gameData.state = GameState.MENU;
+    this.previousHeight = 0;
+    this.previousOnGround = false;
+    this.effectEvents = [];
 
     // 创建初始平台
     this.createInitialPlatforms();
@@ -130,16 +151,23 @@ export class JumpingService {
   private generatePlatformsUpTo(maxY: number): void {
     if (this.gameData.platforms.length === 0) return;
 
-    const lastPlatform = this.gameData.platforms[this.gameData.platforms.length - 1];
-    let currentY = lastPlatform.y;
-    let lastX = lastPlatform.x + lastPlatform.width / 2; // 上一个平台的中心X
+    // 找到最上方的平台（Y值最小的）
+    const highestPlatform = this.gameData.platforms.reduce((prev, curr) => 
+      curr.y < prev.y ? curr : prev
+    );
+    
+    let currentY = highestPlatform.y;
+    let lastX = highestPlatform.x + highestPlatform.width / 2; // 上一个平台的中心X
+    let attempts = 0;
+    const maxAttempts = 1000; // 防止无限循环
 
-    while (currentY > maxY) {
-      // 计算最大可跳距离
-      // 跳跃高度 = (jumpSpeed^2) / (2 * gravity) ≈ 140
-      // 考虑水平移动，最大水平距离约 200-250 像素
-      const maxJumpDistance = 200; // 最大可跳距离（水平+垂直）
+    while (currentY > maxY && attempts < maxAttempts) {
+      attempts++;
       
+      // 计算最大可跳距离
+      const maxJumpDistance = 200;
+      
+      // 保持间距在可跳范围内（60-120像素）
       const gap = JUMPING_CONFIG.platform.minGap + 
                   Math.random() * (JUMPING_CONFIG.platform.maxGap - JUMPING_CONFIG.platform.minGap);
       currentY -= gap;
@@ -150,11 +178,45 @@ export class JumpingService {
       
       // 计算新平台的位置，确保在可跳范围内
       const maxXOffset = Math.min(maxJumpDistance, this.gameData.canvasWidth - width);
-      const xOffset = (Math.random() - 0.5) * maxXOffset * 0.8; // 限制偏移范围
+      const xOffset = (Math.random() - 0.5) * maxXOffset * 0.8;
       let x = lastX - width / 2 + xOffset;
       
       // 确保平台在屏幕内
       x = Math.max(0, Math.min(x, this.gameData.canvasWidth - width));
+      
+      // 检查新平台是否与现有平台重叠
+      // 重叠判断：垂直距离小于30像素（平台高度20 + 小间隙）且水平重叠
+      const overlapThreshold = 30; // 真正的重叠阈值，比 minGap 小得多
+      const overlaps = this.gameData.platforms.some(platform => {
+        const verticalDistance = Math.abs(platform.y - currentY);
+        const horizontalOverlap = !(x + width < platform.x || x > platform.x + platform.width);
+        // 只有真正的重叠才跳过（垂直距离很小且水平重叠）
+        return verticalDistance < overlapThreshold && horizontalOverlap;
+      });
+      
+      // 如果真正重叠，尝试调整X位置而不是跳过
+      if (overlaps) {
+        // 尝试调整X位置避免重叠
+        let adjustedX = x;
+        let foundPosition = false;
+        for (let tryX = 0; tryX < this.gameData.canvasWidth - width; tryX += 20) {
+          adjustedX = tryX;
+          const stillOverlaps = this.gameData.platforms.some(platform => {
+            const verticalDistance = Math.abs(platform.y - currentY);
+            const horizontalOverlap = !(adjustedX + width < platform.x || adjustedX > platform.x + platform.width);
+            return verticalDistance < overlapThreshold && horizontalOverlap;
+          });
+          if (!stillOverlaps) {
+            x = adjustedX;
+            foundPosition = true;
+            break;
+          }
+        }
+        // 如果调整X位置后仍然重叠，才跳过这个平台
+        if (!foundPosition) {
+          continue; // 跳过这个位置，但 currentY 已经减少了，所以间距会保持
+        }
+      }
       
       const colorIndex = Math.floor(Math.random() * JUMPING_CONFIG.platform.colors.length);
       const newPlatform = {
@@ -190,13 +252,38 @@ export class JumpingService {
     }
     
     // 如果玩家下方没有平台，或者距离太远（超过屏幕高度），生成新平台
-    const maxFallDistance = canvasHeight * 1.5; // 允许下落的最大距离
+    const maxFallDistance = canvasHeight * 1.5;
     if (!lowestPlatformBelow || (lowestPlatformBelow.y - playerBottom > maxFallDistance)) {
       // 在玩家下方生成一个平台
-      const platformY = playerBottom + 300; // 在玩家下方300像素处
+      const platformY = playerBottom + 300;
       const width = JUMPING_CONFIG.platform.minWidth + 
                    Math.random() * (JUMPING_CONFIG.platform.maxWidth - JUMPING_CONFIG.platform.minWidth);
-      const x = Math.random() * (this.gameData.canvasWidth - width);
+      
+      // 尝试生成不重叠的平台位置
+      let x = Math.random() * (this.gameData.canvasWidth - width);
+      let attempts = 0;
+      const maxAttempts = 20;
+      
+      // 检查是否与现有平台重叠（使用更合理的重叠阈值）
+      while (attempts < maxAttempts) {
+        const overlaps = this.gameData.platforms.some(platform => {
+          const verticalDistance = Math.abs(platform.y - platformY);
+          const horizontalOverlap = !(x + width < platform.x || x > platform.x + platform.width);
+          // 只有真正的重叠才需要调整（垂直距离小于30像素）
+          return verticalDistance < 30 && horizontalOverlap;
+        });
+        
+        if (!overlaps) {
+          break; // 找到不重叠的位置
+        }
+        
+        // 尝试新位置
+        x = Math.random() * (this.gameData.canvasWidth - width);
+        attempts++;
+      }
+      
+      // 确保在屏幕内
+      x = Math.max(0, Math.min(x, this.gameData.canvasWidth - width));
       
       const colorIndex = Math.floor(Math.random() * JUMPING_CONFIG.platform.colors.length);
       const newPlatform: Platform = {
@@ -303,10 +390,10 @@ export class JumpingService {
     }
     
     // 处理跳跃（在碰撞检测之后，现在知道是否在地面上了）
-    // 简化条件：只要在地面上就可以跳，或者如果下落速度很慢（接近地面）也可以跳
+    // 必须严格站在平台上才能跳跃
     if (this.jumpPressed && this.canJump) {
-      // 如果在地面上，或者下落速度很慢（说明刚离开平台），可以跳跃
-      if (player.onGround || (player.vy >= 0 && player.vy < 3)) {
+      // 只有在平台上才能跳跃（移除容差，防止空中连续跳跃）
+      if (player.onGround) {
         player.vy = config.jumpSpeed;
         player.onGround = false;
         this.canJump = false;
@@ -322,30 +409,54 @@ export class JumpingService {
     const targetCameraY = player.y - this.gameData.canvasHeight * JUMPING_CONFIG.camera.offsetY;
     this.gameData.cameraY += (targetCameraY - this.gameData.cameraY) * JUMPING_CONFIG.camera.followSpeed;
 
-    // 更新高度分数
-    const newHeight = Math.max(this.gameData.height, -player.y);
-    if (newHeight > this.gameData.height) {
-      this.gameData.height = newHeight;
+    // 更新高度和坠落距离
+    const currentHeight = -player.y;
+    const newMaxHeight = Math.max(this.gameData.maxHeight, currentHeight);
+    
+    // 更新最高高度（记录历史最高）
+    if (newMaxHeight > this.gameData.maxHeight) {
+      this.gameData.maxHeight = newMaxHeight;
+      this.gameData.fallDistance = 0; // 到达新高度，重置坠落距离
     }
-
+    
+    // 更新当前显示高度（实时反映玩家位置）
+    if (currentHeight > this.gameData.height) {
+      // 往上爬时，高度增加
+      this.gameData.height = currentHeight;
+      this.gameData.fallDistance = 0; // 上升时重置坠落距离
+    } else if (currentHeight < this.gameData.height) {
+      // 如果高度下降，增加坠落距离并扣除高度
+      this.gameData.fallDistance += this.gameData.height - currentHeight;
+      this.gameData.height = currentHeight;
+    }
+    
+    // 检测平台着陆并触发特效
+    this.checkPlatformLanding();
+    
     // 检查得分（踩到新平台）
     this.checkPlatformScoring();
 
     // 生成玩家下方的平台（安全网）
     this.generatePlatformsBelow();
     
-    // 生成新平台（向上）
-    const lowestPlatform = Math.min(...this.gameData.platforms.map(p => p.y));
-    if (lowestPlatform > this.gameData.cameraY - this.gameData.canvasHeight) {
-      this.generatePlatformsUpTo(lowestPlatform - 500);
+    // 生成新平台（向上）- 只生成一次，避免重复
+    const lowestPlatform = this.gameData.platforms.length > 0 
+      ? Math.min(...this.gameData.platforms.map(p => p.y))
+      : this.gameData.cameraY;
+    
+    // 只在需要时生成新平台（距离相机一定范围）
+    if (lowestPlatform > this.gameData.cameraY - this.gameData.canvasHeight * 0.5) {
+      this.generatePlatformsUpTo(lowestPlatform - 800); // 生成更多平台
     }
     
     // 如果玩家在向下移动，在其上方生成平台（让玩家可以跳回去）
     if (player.vy > 2 && player.y < this.gameData.cameraY + this.gameData.canvasHeight * 0.5) {
-      const highestPlatform = Math.max(...this.gameData.platforms.map(p => p.y));
+      const highestPlatform = this.gameData.platforms.length > 0
+        ? Math.max(...this.gameData.platforms.map(p => p.y))
+        : player.y;
       // 如果玩家上方没有足够的平台，生成新的
-      if (highestPlatform > player.y - 800) {
-        this.generatePlatformsUpTo(player.y - 1000);
+      if (highestPlatform > player.y - 1000) {
+        this.generatePlatformsUpTo(player.y - 1200);
       }
     }
 
@@ -415,6 +526,53 @@ export class JumpingService {
     }
   }
 
+  private checkPlatformLanding(): void {
+    const player = this.gameData.player;
+    
+    // 检测刚着陆到平台（从不在平台上变为在平台上）
+    if (!this.previousOnGround && player.onGround) {
+      // 找到玩家当前站立的平台
+      for (const platform of this.gameData.platforms) {
+        const playerBottom = player.y + player.height;
+        const isOnPlatform = Math.abs(playerBottom - platform.y) < 5 &&
+                           player.x + player.width > platform.x &&
+                           player.x < platform.x + platform.width;
+        
+        if (isOnPlatform) {
+          // 检查是否是黄色或橘色平台
+          const isYellow = platform.color === '#FFD93D';
+          const isOrange = platform.color === '#FFA07A';
+          
+          // 只有黄色或橘色平台才触发流星特效
+          if (isYellow || isOrange) {
+            this.effectEvents.push({
+              type: 'platform_land',
+              platformColor: platform.color,
+              x: platform.x + platform.width / 2,
+              y: platform.y,
+              timestamp: this.gameData.gameTime
+            });
+          }
+          
+          // 如果坠落超过500米后重新站到平台，触发彩虹鼓励特效
+          if (this.gameData.fallDistance > 500) {
+            this.effectEvents.push({
+              type: 'rainbow_encourage',
+              x: player.x + player.width / 2,
+              y: player.y + player.height / 2,
+              timestamp: this.gameData.gameTime
+            });
+            this.gameData.fallDistance = 0; // 重置坠落距离
+          }
+          
+          break;
+        }
+      }
+    }
+    
+    this.previousOnGround = player.onGround;
+  }
+
   private checkPlatformScoring(): void {
     const player = this.gameData.player;
     
@@ -430,6 +588,14 @@ export class JumpingService {
         this.gameData.score += JUMPING_CONFIG.score.pointsPerPlatform;
       }
     }
+  }
+
+  getEffectEvents(): EffectEvent[] {
+    return this.effectEvents;
+  }
+
+  clearEffectEvents(): void {
+    this.effectEvents = [];
   }
 
   private saveHighScore(): void {
