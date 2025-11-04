@@ -1,0 +1,32 @@
+<div class="game-container">
+  <canvas #gameCanvas class="game-canvas" (click)="togglePause()"></canvas>
+  
+  <!-- 菜单界面 -->
+  <div class="menu-overlay" *ngIf="gameData.state === gameState.MENU">
+    <div class="menu-content">
+      <h1>🍎 接物游戏 🍎</h1>
+      <p class="story-text">用篮子接住掉落的水果！<br/>漏接太多游戏就结束了！</p>
+      <p class="high-score">最高记录: {{ getHighScore() }} 分</p>
+      <p class="instructions">使用 ← → 键或 A/D 键移动篮子</p>
+      <ion-button expand="block" (click)="startGame()">开始游戏</ion-button>
+      <ion-button expand="block" fill="outline" (click)="goHome()" style="margin-top: 1rem;">
+        返回主页
+      </ion-button>
+    </div>
+  </div>
+
+  <!-- 游戏结束界面 -->
+  <div class="menu-overlay" *ngIf="gameData.state === gameState.GAME_OVER">
+    <div class="menu-content">
+      <h1>😢 游戏结束</h1>
+      <p class="final-score">最终分数: {{ gameData.score }} 分</p>
+      <p class="high-score" *ngIf="gameData.score > getHighScore()">🎉 新纪录！</p>
+      <p class="high-score" *ngIf="gameData.score <= getHighScore()">最高记录: {{ getHighScore() }} 分</p>
+      <ion-button expand="block" (click)="startGame()">再试一次</ion-button>
+      <ion-button expand="block" fill="outline" (click)="goHome()" style="margin-top: 1rem;">
+        返回主页
+      </ion-button>
+    </div>
+  </div>
+</div>
+

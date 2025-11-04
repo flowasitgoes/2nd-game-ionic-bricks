@@ -11,7 +11,7 @@ export class HomePage {
 
   constructor(private router: Router) {}
 
-  navigateToGame(game: 'breakout' | 'rhythm' | 'shooting'): void {
+  navigateToGame(game: 'breakout' | 'rhythm' | 'shooting' | 'catching' | 'jumping'): void {
     this.router.navigate([`/${game}`]);
   }
 

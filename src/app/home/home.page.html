@@ -44,6 +44,32 @@
           </div>
         </ion-card-content>
       </ion-card>
+
+      <ion-card class="game-card" (click)="navigateToGame('catching')">
+        <ion-card-header>
+          <ion-card-title>🍎 接物游戏</ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <p>用篮子接住掉落的水果！漏接太多游戏就结束了！</p>
+          <div class="game-features">
+            <span>🍎 随机掉落</span>
+            <span>❤️ 生命系统</span>
+          </div>
+        </ion-card-content>
+      </ion-card>
+
+      <ion-card class="game-card" (click)="navigateToGame('jumping')">
+        <ion-card-header>
+          <ion-card-title>🧗 跳躍平台遊戲</ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <p>控制角色不断往上跳跃，踩平台得分！看看你能跳多高！</p>
+          <div class="game-features">
+            <span>🧗 无限跳跃</span>
+            <span>📏 高度挑战</span>
+          </div>
+        </ion-card-content>
+      </ion-card>
     </div>
   </div>
 </ion-content>

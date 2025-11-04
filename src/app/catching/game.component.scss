@@ -1,0 +1,100 @@
+.game-container {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #000;
+  overflow: hidden;
+}
+
+.game-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  touch-action: none;
+}
+
+.menu-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+}
+
+.menu-content {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 2rem;
+  border-radius: 20px;
+  text-align: center;
+  color: white;
+  max-width: 90%;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.menu-content h1 {
+  margin: 0 0 1rem 0;
+  font-size: 2rem;
+  font-weight: bold;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.story-text {
+  margin: 1rem 0;
+  font-size: 1.1rem;
+  line-height: 1.6;
+}
+
+.final-score {
+  margin: 1rem 0;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #FFD700;
+}
+
+.high-score {
+  margin: 0.5rem 0;
+  font-size: 1rem;
+  color: #FFD700;
+}
+
+.instructions {
+  margin: 1rem 0;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.9);
+  font-style: italic;
+}
+
+ion-button {
+  margin-top: 1rem;
+  --background: #4CAF50;
+  --color: white;
+  --border-radius: 10px;
+  font-weight: bold;
+}
+
+ion-button[fill="outline"] {
+  --border-color: white;
+  --color: white;
+  --background: transparent;
+}
+

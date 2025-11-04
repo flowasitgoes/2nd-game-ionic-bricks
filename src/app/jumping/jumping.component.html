@@ -1,0 +1,44 @@
+<div class="game-container">
+  <canvas #gameCanvas class="game-canvas"></canvas>
+  
+  <!-- 菜单界面 -->
+  <div class="menu-overlay" *ngIf="gameData.state === gameState.MENU">
+    <div class="menu-content">
+      <h1>🧗 跳躍平台遊戲</h1>
+      <p class="game-description">控制角色不断往上跳跃，踩平台得分！</p>
+      <div class="controls-info">
+        <p><strong>操作方式：</strong></p>
+        <ul>
+          <li>← → 或 A/D：左右移动</li>
+          <li>空格键 或 ↑ 或 W：跳跃</li>
+          <li>P 键：暂停/继续</li>
+          <li>触摸屏幕左侧：向左移动</li>
+          <li>触摸屏幕右侧：向右移动</li>
+          <li>快速点击：跳跃</li>
+        </ul>
+      </div>
+      <button class="start-button" (click)="startGame()">开始游戏</button>
+      <div class="high-score" *ngIf="highScore > 0">
+        <p>最高高度: {{ highScore | number:'1.0-0' }}m</p>
+      </div>
+      <button class="home-button" (click)="goHome()">返回主页</button>
+    </div>
+  </div>
+
+  <!-- 游戏结束界面 -->
+  <div class="game-over-overlay" *ngIf="gameData.state === gameState.GAME_OVER">
+    <div class="game-over-content">
+      <h1>游戏结束</h1>
+      <div class="final-stats">
+        <p>最终分数: <strong>{{ gameData.score }}</strong></p>
+        <p>达到高度: <strong>{{ gameData.height | number:'1.0-0' }}m</strong></p>
+        <p *ngIf="highScore > 0">
+          最高记录: <strong>{{ highScore | number:'1.0-0' }}m</strong>
+        </p>
+      </div>
+      <button class="restart-button" (click)="startGame()">再来一次</button>
+      <button class="home-button" (click)="goHome()">返回主页</button>
+    </div>
+  </div>
+</div>
+

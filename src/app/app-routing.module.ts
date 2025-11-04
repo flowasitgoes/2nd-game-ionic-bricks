@@ -19,6 +19,14 @@ const routes: Routes = [
     loadChildren: () => import('./shooting/shooting.module').then( m => m.ShootingModule)
   },
   {
+    path: 'catching',
+    loadChildren: () => import('./catching/catching.module').then( m => m.CatchingModule)
+  },
+  {
+    path: 'jumping',
+    loadChildren: () => import('./jumping/jumping.module').then( m => m.JumpingModule)
+  },
+  {
     path: '',
     redirectTo: 'home',
     pathMatch: 'full'
