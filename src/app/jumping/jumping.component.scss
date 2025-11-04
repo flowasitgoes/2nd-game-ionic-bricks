@@ -16,10 +16,7 @@
 .menu-overlay,
 .game-over-overlay {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  inset: 0;
   background: rgba(0, 0, 0, 0.8);
   display: flex;
   justify-content: center;
@@ -36,13 +33,12 @@
   color: white;
   max-width: 90%;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-}
-
-.menu-content h1,
-.game-over-content h1 {
-  margin: 0 0 1rem 0;
-  font-size: 2rem;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  
+  h1 {
+    margin: 0 0 1rem 0;
+    font-size: 2rem;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  }
 }
 
 .game-description {
@@ -84,20 +80,16 @@
   transition: all 0.3s;
   font-weight: bold;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-}
-
-.start-button:hover,
-.restart-button:hover,
-.home-button:hover {
-  background: #45B7D1;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-}
-
-.start-button:active,
-.restart-button:active,
-.home-button:active {
-  transform: translateY(0);
+  
+  &:hover {
+    background: #45B7D1;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
 }
 
 .high-score {
@@ -245,7 +237,6 @@
 
 .play-button,
 .clear-button {
-  background: #4ECDC4;
   color: white;
   border: none;
   padding: 0.6rem 1.2rem;
@@ -254,25 +245,30 @@
   cursor: pointer;
   transition: all 0.3s;
   font-weight: bold;
+  
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+  }
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 }
 
-.play-button:hover:not(:disabled),
-.clear-button:hover:not(:disabled) {
-  background: #45B7D1;
-  transform: translateY(-2px);
-}
-
-.play-button:disabled,
-.clear-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+.play-button {
+  background: #4ECDC4;
+  
+  &:hover:not(:disabled) {
+    background: #45B7D1;
+  }
 }
 
 .clear-button {
   background: #FF6B6B;
-}
-
-.clear-button:hover:not(:disabled) {
-  background: #FF5252;
+  
+  &:hover:not(:disabled) {
+    background: #FF5252;
+  }
 }
 
