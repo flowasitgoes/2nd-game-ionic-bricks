@@ -144,7 +144,8 @@ export class JumpingComponent implements OnInit, AfterViewInit, OnDestroy {
     this.resizeCanvas();
     window.addEventListener('resize', () => this.resizeCanvas());
     
-    this.setupTouchEvents();
+    // 移动端改用按钮控制，不再需要canvas的触摸事件
+    // this.setupTouchEvents();
     this.setupKeyboardEvents();
   }
 
@@ -188,66 +189,32 @@ export class JumpingComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  private setupTouchEvents(): void {
-    let touchStartX = 0;
-    let touchStartY = 0;
-    let touchStartTime = 0;
-
-    this.canvas.addEventListener('touchstart', (e) => {
-      e.preventDefault();
-      const touch = e.touches[0];
-      const rect = this.canvas.getBoundingClientRect();
-      touchStartX = touch.clientX - rect.left;
-      touchStartY = touch.clientY - rect.top;
-      touchStartTime = Date.now();
-      
-      // 判断是移动还是跳跃
-      const centerX = rect.width / 2;
-      if (touchStartX < centerX) {
-        this.jumpingService.setMoveLeft(true);
-      } else {
-        this.jumpingService.setMoveRight(true);
-      }
-    }, { passive: false });
-
-    this.canvas.addEventListener('touchmove', (e) => {
-      e.preventDefault();
-      const touch = e.touches[0];
-      const rect = this.canvas.getBoundingClientRect();
-      const currentX = touch.clientX - rect.left;
-      const currentY = touch.clientY - rect.top;
-      
-      const centerX = rect.width / 2;
-      if (currentX < centerX) {
-        this.jumpingService.setMoveLeft(true);
-        this.jumpingService.setMoveRight(false);
-      } else {
-        this.jumpingService.setMoveRight(true);
-        this.jumpingService.setMoveLeft(false);
-      }
-    }, { passive: false });
-
-    this.canvas.addEventListener('touchend', (e) => {
-      e.preventDefault();
-      const touchEndTime = Date.now();
-      const touchDuration = touchEndTime - touchStartTime;
-      
-      // 如果触摸时间很短（< 200ms），视为跳跃
-      if (touchDuration < 200) {
-        this.jumpingService.setJump(true);
-        setTimeout(() => this.jumpingService.setJump(false), 100);
-      }
-      
-      this.jumpingService.setMoveLeft(false);
+  // 移动端按钮触摸控制
+  onTouchStart(action: 'left' | 'right' | 'jump'): void {
+    if (action === 'left') {
+      this.jumpingService.setMoveLeft(true);
       this.jumpingService.setMoveRight(false);
-    }, { passive: false });
-
-    this.canvas.addEventListener('touchcancel', (e) => {
-      e.preventDefault();
+    } else if (action === 'right') {
+      this.jumpingService.setMoveRight(true);
       this.jumpingService.setMoveLeft(false);
-      this.jumpingService.setMoveRight(false);
-    }, { passive: false });
+    } else if (action === 'jump') {
+      this.jumpingService.setJump(true);
+      // 跳跃是一次性动作，不需要持续按住
+      setTimeout(() => this.jumpingService.setJump(false), 100);
+    }
   }
+
+  onTouchEnd(action: 'left' | 'right' | 'jump'): void {
+    if (action === 'left') {
+      this.jumpingService.setMoveLeft(false);
+    } else if (action === 'right') {
+      this.jumpingService.setMoveRight(false);
+    }
+    // jump不需要处理touchend，因为已经在touchstart中处理
+  }
+
+  // 旧的触摸事件处理已移除，改用按钮控制
+  // private setupTouchEvents(): void { ... }
 
   private setupKeyboardEvents(): void {
     const handleKeyDown = (e: KeyboardEvent) => {

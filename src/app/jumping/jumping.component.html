@@ -1,6 +1,40 @@
 <div class="game-container">
   <canvas #gameCanvas class="game-canvas"></canvas>
   
+  <!-- 移动端控制按钮 -->
+  <div class="mobile-controls" *ngIf="gameData.state === gameState.PLAYING || gameData.state === gameState.PAUSED">
+    <button 
+      class="control-btn left-btn" 
+      (touchstart)="onTouchStart('left')"
+      (touchend)="onTouchEnd('left')"
+      (touchcancel)="onTouchEnd('left')"
+      type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M15 18l-6-6 6-6"/>
+      </svg>
+    </button>
+    <button 
+      class="control-btn jump-btn" 
+      (touchstart)="onTouchStart('jump')"
+      (touchend)="onTouchEnd('jump')"
+      (touchcancel)="onTouchEnd('jump')"
+      type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 5v14M5 12l7-7 7 7"/>
+      </svg>
+    </button>
+    <button 
+      class="control-btn right-btn" 
+      (touchstart)="onTouchStart('right')"
+      (touchend)="onTouchEnd('right')"
+      (touchcancel)="onTouchEnd('right')"
+      type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M9 18l6-6-6-6"/>
+      </svg>
+    </button>
+  </div>
+  
   <!-- 菜单界面 -->
   <div class="menu-overlay" *ngIf="gameData.state === gameState.MENU">
     <div class="menu-content">
@@ -74,9 +108,7 @@
           <li>← → 或 A/D：左右移动</li>
           <li>空格键 或 ↑ 或 W：跳跃</li>
           <li>P 键：暂停/继续</li>
-          <li>触摸屏幕左侧：向左移动</li>
-          <li>触摸屏幕右侧：向右移动</li>
-          <li>快速点击：跳跃</li>
+          <li><strong>移动端：</strong>使用屏幕底部的控制按钮</li>
         </ul>
       </div>
       

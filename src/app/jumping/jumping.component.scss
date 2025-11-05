@@ -11,6 +11,7 @@
   height: 100%;
   display: block;
   background: #87CEEB;
+  touch-action: none; // 阻止canvas的默认触摸行为，只有按钮可以响应
 }
 
 .menu-overlay,
@@ -475,5 +476,115 @@
   &:hover:not(:disabled) {
     background: #FF5252;
   }
+}
+
+// 移动端控制按钮 - Liquid Glass 效果
+.mobile-controls {
+  position: absolute;
+  bottom: 2rem;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 0 2rem;
+  z-index: 5;
+  pointer-events: none; // 让按钮之外的部分可以穿透
+  
+  @media (min-width: 769px) {
+    display: none; // 桌面端不显示
+  }
+  
+  @media (max-width: 480px) {
+    bottom: 1.5rem;
+    padding: 0 1rem;
+  }
+}
+
+.control-btn {
+  pointer-events: auto; // 按钮本身可以点击
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.15); // 半透明背景
+  backdrop-filter: blur(10px) saturate(180%); // Liquid glass 效果
+  -webkit-backdrop-filter: blur(10px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.3); // 玻璃边缘
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  touch-action: manipulation;
+  box-shadow: 
+    0 8px 32px 0 rgba(31, 38, 135, 0.37),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.3); // 玻璃光泽效果
+  
+  @media (max-width: 480px) {
+    width: 60px;
+    height: 60px;
+  }
+  
+  svg {
+    width: 30px;
+    height: 30px;
+    stroke: rgba(255, 255, 255, 0.9);
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+    
+    @media (max-width: 480px) {
+      width: 26px;
+      height: 26px;
+    }
+  }
+  
+  // 按下时的效果
+  &:active {
+    transform: scale(0.95);
+    background: rgba(255, 255, 255, 0.25);
+    box-shadow: 
+      0 4px 16px 0 rgba(31, 38, 135, 0.3),
+      inset 0 1px 1px 0 rgba(255, 255, 255, 0.4);
+  }
+  
+  // 悬停效果（桌面端鼠标悬停）
+  &:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+    box-shadow: 
+      0 12px 40px 0 rgba(31, 38, 135, 0.4),
+      inset 0 1px 1px 0 rgba(255, 255, 255, 0.35);
+  }
+}
+
+// 中间跳跃按钮稍大一些
+.jump-btn {
+  width: 80px;
+  height: 80px;
+  
+  @media (max-width: 480px) {
+    width: 70px;
+    height: 70px;
+  }
+  
+  svg {
+    width: 35px;
+    height: 35px;
+    
+    @media (max-width: 480px) {
+      width: 30px;
+      height: 30px;
+    }
+  }
+}
+
+// 左右按钮的特殊样式
+.left-btn {
+  // 可以添加特定颜色或效果
+}
+
+.right-btn {
+  // 可以添加特定颜色或效果
 }
 
