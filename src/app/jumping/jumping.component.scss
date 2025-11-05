@@ -11,7 +11,7 @@
   height: 100%;
   display: block;
   background: #87CEEB;
-  touch-action: none; // 阻止canvas的默认触摸行为，只有按钮可以响应
+  touch-action: none;
 }
 
 .menu-overlay,
@@ -23,9 +23,7 @@
   justify-content: center;
   align-items: center;
   z-index: 10;
-  padding: 1rem; // 移动端添加内边距
-  
-  // 移动端确保可以滚动
+  padding: 1rem;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
 }
@@ -38,35 +36,34 @@
   text-align: center;
   color: white;
   max-width: 90%;
-  max-height: 90vh; // 限制最大高度
+  max-height: 90vh;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-  overflow-y: auto; // 内容可以滚动
-  -webkit-overflow-scrolling: touch; // iOS平滑滚动
-  
-  // 移动端样式
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+
   @media (max-width: 768px) {
     padding: 1.5rem;
     max-width: 95%;
     max-height: 95vh;
     border-radius: 15px;
   }
-  
+
   @media (max-width: 480px) {
     padding: 1rem;
     max-width: 98%;
     border-radius: 10px;
   }
-  
+
   h1 {
     margin: 0 0 1rem 0;
     font-size: 2rem;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-    
+
     @media (max-width: 768px) {
       font-size: 1.5rem;
       margin: 0 0 0.8rem 0;
     }
-    
+
     @media (max-width: 480px) {
       font-size: 1.2rem;
       margin: 0 0 0.5rem 0;
@@ -78,12 +75,12 @@
   margin: 1rem 0;
   font-size: 1.1rem;
   opacity: 0.9;
-  
+
   @media (max-width: 768px) {
     font-size: 0.95rem;
     margin: 0.8rem 0;
   }
-  
+
   @media (max-width: 480px) {
     font-size: 0.85rem;
     margin: 0.5rem 0;
@@ -96,33 +93,33 @@
   background: rgba(255, 255, 255, 0.1);
   padding: 1rem;
   border-radius: 10px;
-  
+
   @media (max-width: 768px) {
     margin: 1rem 0;
     padding: 0.8rem;
     font-size: 0.9rem;
   }
-  
+
   @media (max-width: 480px) {
     margin: 0.8rem 0;
     padding: 0.6rem;
     font-size: 0.8rem;
   }
-}
 
-.controls-info ul {
-  list-style: none;
-  padding: 0;
-  margin: 0.5rem 0 0 0;
-}
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0.5rem 0 0 0;
+  }
 
-.controls-info li {
-  margin: 0.5rem 0;
-  font-size: 0.9rem;
-  
-  @media (max-width: 480px) {
-    font-size: 0.75rem;
-    margin: 0.4rem 0;
+  li {
+    margin: 0.5rem 0;
+    font-size: 0.9rem;
+
+    @media (max-width: 480px) {
+      font-size: 0.75rem;
+      margin: 0.4rem 0;
+    }
   }
 }
 
@@ -140,33 +137,33 @@
   transition: all 0.3s;
   font-weight: bold;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-  min-height: 44px; // 移动端可点击区域最小高度
-  touch-action: manipulation; // 移动端点击优化
-  
+  min-height: 44px;
+  touch-action: manipulation;
+
   @media (max-width: 768px) {
     padding: 0.8rem 1.5rem;
     font-size: 1rem;
     margin: 0.4rem;
   }
-  
+
   @media (max-width: 480px) {
     padding: 0.7rem 1.2rem;
     font-size: 0.9rem;
     margin: 0.3rem;
-    width: calc(100% - 0.6rem); // 移动端按钮宽度自适应
-    min-height: 48px; // 更大的点击区域
+    width: calc(100% - 0.6rem);
+    min-height: 48px;
   }
-  
+
   &:hover {
     background: #45B7D1;
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
   }
-  
+
   &:active {
     transform: translateY(0);
   }
-  
+
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
@@ -178,7 +175,7 @@
   padding: 0.5rem;
   background: rgba(255, 255, 255, 0.2);
   border-radius: 8px;
-  
+
   @media (max-width: 480px) {
     margin: 0.8rem 0;
     padding: 0.4rem;
@@ -188,47 +185,47 @@
 
 .final-stats {
   margin: 1.5rem 0;
-  
+
   @media (max-width: 480px) {
     margin: 1rem 0;
   }
-}
 
-.final-stats p {
-  margin: 0.5rem 0;
-  font-size: 1.1rem;
-  
-  @media (max-width: 480px) {
-    font-size: 0.95rem;
-  }
-}
-
-.final-stats strong {
-  color: #FFD93D;
-  font-size: 1.3rem;
-  
-  @media (max-width: 480px) {
+  p {
+    margin: 0.5rem 0;
     font-size: 1.1rem;
+
+    @media (max-width: 480px) {
+      font-size: 0.95rem;
+    }
+  }
+
+  strong {
+    color: #FFD93D;
+    font-size: 1.3rem;
+
+    @media (max-width: 480px) {
+      font-size: 1.1rem;
+    }
   }
 }
 
 .mode-selection {
   margin: 1.5rem 0;
   text-align: left;
-  
+
   @media (max-width: 480px) {
     margin: 1rem 0;
   }
-}
 
-.mode-selection h3 {
-  margin: 0 0 1rem 0;
-  font-size: 1.2rem;
-  text-align: center;
-  
-  @media (max-width: 480px) {
-    font-size: 1rem;
-    margin: 0 0 0.8rem 0;
+  h3 {
+    margin: 0 0 1rem 0;
+    font-size: 1.2rem;
+    text-align: center;
+
+    @media (max-width: 480px) {
+      font-size: 1rem;
+      margin: 0 0 0.8rem 0;
+    }
   }
 }
 
@@ -241,61 +238,61 @@
   transition: all 0.3s;
   display: flex;
   align-items: center;
-  min-height: 44px; // 移动端可点击区域
+  min-height: 44px;
   touch-action: manipulation;
-  
+
   @media (max-width: 480px) {
     margin: 0.6rem 0;
     padding: 0.6rem;
     min-height: 48px;
   }
-  
+
   &:hover {
     background: rgba(255, 255, 255, 0.2);
     transform: translateX(5px);
   }
-  
+
   &:active {
     transform: translateX(2px);
   }
-}
 
-.mode-option input[type="radio"] {
-  margin-right: 0.8rem;
-  cursor: pointer;
-  width: 20px;
-  height: 20px;
-  
-  @media (max-width: 480px) {
-    margin-right: 0.6rem;
-    width: 18px;
-    height: 18px;
+  input[type="radio"] {
+    margin-right: 0.8rem;
+    cursor: pointer;
+    width: 20px;
+    height: 20px;
+
+    @media (max-width: 480px) {
+      margin-right: 0.6rem;
+      width: 18px;
+      height: 18px;
+    }
   }
-}
 
-.mode-option label {
-  flex: 1;
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-}
+  label {
+    flex: 1;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
 
-.mode-option label strong {
-  font-size: 1rem;
-  margin-bottom: 0.3rem;
-  
-  @media (max-width: 480px) {
-    font-size: 0.9rem;
-    margin-bottom: 0.2rem;
-  }
-}
+    strong {
+      font-size: 1rem;
+      margin-bottom: 0.3rem;
 
-.mode-option label span {
-  font-size: 0.85rem;
-  opacity: 0.8;
-  
-  @media (max-width: 480px) {
-    font-size: 0.75rem;
+      @media (max-width: 480px) {
+        font-size: 0.9rem;
+        margin-bottom: 0.2rem;
+      }
+    }
+
+    span {
+      font-size: 0.85rem;
+      opacity: 0.8;
+
+      @media (max-width: 480px) {
+        font-size: 0.75rem;
+      }
+    }
   }
 }
 
@@ -304,20 +301,20 @@
   padding: 1rem;
   background: rgba(255, 255, 255, 0.05);
   border-radius: 10px;
-  
+
   @media (max-width: 480px) {
     margin-top: 1rem;
     padding: 0.8rem;
   }
-}
 
-.song-selection h4 {
-  margin: 0 0 0.8rem 0;
-  font-size: 1rem;
-  
-  @media (max-width: 480px) {
-    font-size: 0.9rem;
-    margin: 0 0 0.6rem 0;
+  h4 {
+    margin: 0 0 0.8rem 0;
+    font-size: 1rem;
+
+    @media (max-width: 480px) {
+      font-size: 0.9rem;
+      margin: 0 0 0.6rem 0;
+    }
   }
 }
 
@@ -325,7 +322,7 @@
   max-height: 200px;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  
+
   @media (max-width: 480px) {
     max-height: 150px;
   }
@@ -340,57 +337,57 @@
   transition: all 0.3s;
   display: flex;
   flex-direction: column;
-  min-height: 44px; // 移动端可点击区域
+  min-height: 44px;
   touch-action: manipulation;
-  
+
   @media (max-width: 480px) {
     padding: 0.5rem;
     margin: 0.3rem 0;
     min-height: 48px;
   }
-  
+
   &:hover {
     background: rgba(255, 255, 255, 0.2);
   }
-  
+
   &:active {
     background: rgba(255, 255, 255, 0.15);
   }
-}
 
-.song-item.selected {
-  background: rgba(255, 215, 0, 0.3);
-  border: 2px solid #FFD93D;
-}
-
-.song-item strong {
-  font-size: 1rem;
-  margin-bottom: 0.3rem;
-  
-  @media (max-width: 480px) {
-    font-size: 0.9rem;
-    margin-bottom: 0.2rem;
+  &.selected {
+    background: rgba(255, 215, 0, 0.3);
+    border: 2px solid #FFD93D;
   }
-}
 
-.song-item span {
-  font-size: 0.85rem;
-  opacity: 0.8;
-  margin: 0.2rem 0;
-  
-  @media (max-width: 480px) {
+  strong {
+    font-size: 1rem;
+    margin-bottom: 0.3rem;
+
+    @media (max-width: 480px) {
+      font-size: 0.9rem;
+      margin-bottom: 0.2rem;
+    }
+  }
+
+  span {
+    font-size: 0.85rem;
+    opacity: 0.8;
+    margin: 0.2rem 0;
+
+    @media (max-width: 480px) {
+      font-size: 0.75rem;
+      margin: 0.15rem 0;
+    }
+  }
+
+  .difficulty {
     font-size: 0.75rem;
-    margin: 0.15rem 0;
-  }
-}
+    opacity: 0.7;
+    font-style: italic;
 
-.song-item .difficulty {
-  font-size: 0.75rem;
-  opacity: 0.7;
-  font-style: italic;
-  
-  @media (max-width: 480px) {
-    font-size: 0.65rem;
+    @media (max-width: 480px) {
+      font-size: 0.65rem;
+    }
   }
 }
 
@@ -400,20 +397,20 @@
   background: rgba(255, 255, 255, 0.05);
   border-radius: 10px;
   text-align: center;
-  
+
   @media (max-width: 480px) {
     margin-top: 1rem;
     padding: 0.8rem;
   }
-}
 
-.creative-controls p {
-  margin: 0 0 0.8rem 0;
-  font-size: 0.9rem;
-  
-  @media (max-width: 480px) {
-    font-size: 0.8rem;
-    margin: 0 0 0.6rem 0;
+  p {
+    margin: 0 0 0.8rem 0;
+    font-size: 0.9rem;
+
+    @media (max-width: 480px) {
+      font-size: 0.8rem;
+      margin: 0 0 0.6rem 0;
+    }
   }
 }
 
@@ -421,9 +418,9 @@
   display: flex;
   gap: 0.5rem;
   justify-content: center;
-  
+
   @media (max-width: 480px) {
-    flex-direction: column; // 移动端按钮垂直排列
+    flex-direction: column;
     gap: 0.4rem;
   }
 }
@@ -438,24 +435,24 @@
   cursor: pointer;
   transition: all 0.3s;
   font-weight: bold;
-  min-height: 44px; // 移动端可点击区域
+  min-height: 44px;
   touch-action: manipulation;
-  
+
   @media (max-width: 480px) {
     padding: 0.7rem 1rem;
     font-size: 0.85rem;
     width: 100%;
     min-height: 48px;
   }
-  
+
   &:hover:not(:disabled) {
     transform: translateY(-2px);
   }
-  
+
   &:active:not(:disabled) {
     transform: translateY(0);
   }
-  
+
   &:disabled {
     opacity: 0.5;
     cursor: not-allowed;
@@ -464,7 +461,7 @@
 
 .play-button {
   background: #4ECDC4;
-  
+
   &:hover:not(:disabled) {
     background: #45B7D1;
   }
@@ -472,13 +469,12 @@
 
 .clear-button {
   background: #FF6B6B;
-  
+
   &:hover:not(:disabled) {
     background: #FF5252;
   }
 }
 
-// 移动端控制按钮 - Liquid Glass 效果
 .mobile-controls {
   position: absolute;
   bottom: 2rem;
@@ -489,12 +485,12 @@
   align-items: center;
   padding: 0 2rem;
   z-index: 5;
-  pointer-events: none; // 让按钮之外的部分可以穿透
-  
+  pointer-events: none;
+
   @media (min-width: 769px) {
-    display: none; // 桌面端不显示
+    display: none;
   }
-  
+
   @media (max-width: 480px) {
     bottom: 1.5rem;
     padding: 0 1rem;
@@ -502,89 +498,71 @@
 }
 
 .control-btn {
-  pointer-events: auto; // 按钮本身可以点击
+  pointer-events: auto;
   width: 70px;
   height: 70px;
   border-radius: 50%;
   border: none;
-  background: rgba(255, 255, 255, 0.15); // 半透明背景
-  backdrop-filter: blur(10px) saturate(180%); // Liquid glass 效果
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px) saturate(180%);
   -webkit-backdrop-filter: blur(10px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.3); // 玻璃边缘
+  border: 1px solid rgba(255, 255, 255, 0.3);
   color: white;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
+  transition: all 0.2s;
   touch-action: manipulation;
-  box-shadow: 
-    0 8px 32px 0 rgba(31, 38, 135, 0.37),
-    inset 0 1px 1px 0 rgba(255, 255, 255, 0.3); // 玻璃光泽效果
-  
+  box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37), inset 0 1px 1px rgba(255, 255, 255, 0.3);
+
   @media (max-width: 480px) {
     width: 60px;
     height: 60px;
   }
-  
+
   svg {
     width: 30px;
     height: 30px;
     stroke: rgba(255, 255, 255, 0.9);
     filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
-    
+
     @media (max-width: 480px) {
       width: 26px;
       height: 26px;
     }
   }
-  
-  // 按下时的效果
+
   &:active {
     transform: scale(0.95);
     background: rgba(255, 255, 255, 0.25);
-    box-shadow: 
-      0 4px 16px 0 rgba(31, 38, 135, 0.3),
-      inset 0 1px 1px 0 rgba(255, 255, 255, 0.4);
+    box-shadow: 0 4px 16px rgba(31, 38, 135, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.4);
   }
-  
-  // 悬停效果（桌面端鼠标悬停）
+
   &:hover {
     background: rgba(255, 255, 255, 0.2);
     transform: translateY(-2px);
-    box-shadow: 
-      0 12px 40px 0 rgba(31, 38, 135, 0.4),
-      inset 0 1px 1px 0 rgba(255, 255, 255, 0.35);
+    box-shadow: 0 12px 40px rgba(31, 38, 135, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.35);
   }
 }
 
-// 中间跳跃按钮稍大一些
 .jump-btn {
   width: 80px;
   height: 80px;
-  
+
   @media (max-width: 480px) {
     width: 70px;
     height: 70px;
   }
-  
+
   svg {
     width: 35px;
     height: 35px;
-    
+
     @media (max-width: 480px) {
       width: 30px;
       height: 30px;
     }
   }
-}
-
-// 左右按钮的特殊样式
-.left-btn {
-  // 可以添加特定颜色或效果
-}
-
-.right-btn {
-  // 可以添加特定颜色或效果
 }
 
