@@ -1,0 +1,169 @@
+<div class="rhythm-container">
+  <!-- 菜单界面 -->
+  <div class="menu-overlay" *ngIf="gameData.state === rhythmState.MENU">
+    <div class="menu-content">
+      <h1>🎵 音乐节奏游戏 🎵</h1>
+      <p class="story-text">根据节拍按下对应按键！<br/>展现你的音乐天赋吧！</p>
+      
+      <div class="level-selector" *ngIf="gameData.currentLevel">
+        <h3>选择关卡</h3>
+        <ion-button 
+          *ngFor="let level of levels" 
+          expand="block"
+          [class.selected]="gameData.currentLevel?.id === level.id"
+          (click)="selectLevel(level.id)">
+          {{ level.name }} ({{ level.bpm }} BPM)
+        </ion-button>
+      </div>
+      
+      <ion-button expand="block" (click)="startGame()" *ngIf="gameData.currentLevel">
+        开始游戏
+      </ion-button>
+      
+      <ion-button expand="block" fill="outline" (click)="goHome()" style="margin-top: 1rem;">
+        返回主页
+      </ion-button>
+    </div>
+  </div>
+
+  <!-- 游戏界面 -->
+  <div class="game-screen" *ngIf="gameData.state === rhythmState.PLAYING || gameData.state === rhythmState.PAUSED">
+    <!-- 游戏信息 -->
+    <div class="game-info">
+      <div class="info-row">
+        <div class="left-info">
+          <div class="score">分数: {{ Math.floor(gameData.score) }}</div>
+          <div class="combo" *ngIf="gameData.combo > 0">连击: {{ gameData.combo }}</div>
+          <div class="accuracy" [style.color]="getAccuracyColor()">
+            准确度: {{ gameData.accuracy.toFixed(1) }}%
+          </div>
+        </div>
+        <div class="right-info">
+          <button 
+            class="pause-button"
+            (click)="togglePause()"
+            *ngIf="gameData.state === rhythmState.PLAYING || gameData.state === rhythmState.PAUSED">
+            <span *ngIf="gameData.state === rhythmState.PLAYING">⏸️</span>
+            <span *ngIf="gameData.state === rhythmState.PAUSED">▶️</span>
+          </button>
+          <div class="timer">
+            ⏱️ {{ formatTime(gameData.currentTime) }}
+          </div>
+        </div>
+      </div>
+      <div class="time-progress">
+        <div class="progress-bar">
+          <div class="progress-fill" 
+               [style.width.%]="gameData.currentLevel ? (gameData.currentTime / gameData.currentLevel.duration * 100) : 0">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 音符下落区域 -->
+    <div class="notes-area">
+      <div class="key-lane" *ngFor="let key of keyConfig.keys">
+        <div class="lane" [style.background-color]="getKeyColor(key) + '20'">
+          <!-- 判定线 -->
+          <div class="hit-line" [style.background-color]="getKeyColor(key)"></div>
+          
+          <!-- 下落的音符 -->
+          <div 
+            *ngFor="let note of getNotesForKey(key)"
+            class="note"
+            [ngStyle]="getNoteStyle(note)"
+            [class.hit]="note.hit"
+            [class.perfect]="note.accuracy === 'perfect'"
+            [class.great]="note.accuracy === 'great'"
+            [class.good]="note.accuracy === 'good'">
+            <span class="note-key">{{ note.key }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 按键提示 -->
+    <div class="keys-container">
+      <div 
+        *ngFor="let key of keyConfig.keys" 
+        class="key-button"
+        [ngClass]="'key-' + key.toLowerCase()"
+        [style.background-color]="getKeyColor(key)"
+        [style.border-color]="getKeyColor(key)">
+        <span>{{ key }}</span>
+      </div>
+    </div>
+
+    <!-- 暂停提示 -->
+    <div class="pause-overlay" *ngIf="gameData.state === rhythmState.PAUSED">
+      <div class="pause-content">
+        <h2>暂停</h2>
+        <ion-button expand="block" (click)="resumeGame()">继续游戏</ion-button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 游戏结束界面 -->
+  <div class="menu-overlay" *ngIf="gameData.state === rhythmState.FINISHED">
+    <div class="menu-content">
+      <h1>🎉 游戏结束！</h1>
+      
+      <div class="result-stats">
+        <div class="stat-item">
+          <div class="stat-label">总分</div>
+          <div class="stat-value">{{ Math.floor(gameData.score) }}</div>
+        </div>
+        
+        <div class="stat-item">
+          <div class="stat-label">评级</div>
+          <div class="stat-value rank-{{ getRank().toLowerCase() }}">{{ getRank() }}</div>
+          <div class="stat-sub">{{ getRankName() }}</div>
+        </div>
+        
+        <div class="stat-item">
+          <div class="stat-label">准确度</div>
+          <div class="stat-value" [style.color]="getAccuracyColor()">
+            {{ gameData.accuracy.toFixed(1) }}%
+          </div>
+        </div>
+        
+        <div class="stat-item">
+          <div class="stat-label">最高连击</div>
+          <div class="stat-value">{{ gameData.maxCombo }}</div>
+        </div>
+      </div>
+
+      <div class="accuracy-breakdown">
+        <h3>详细统计</h3>
+        <div class="breakdown-item">
+          <span class="breakdown-label perfect">Perfect</span>
+          <span class="breakdown-value">{{ gameData.stats.perfect }}</span>
+        </div>
+        <div class="breakdown-item">
+          <span class="breakdown-label great">Great</span>
+          <span class="breakdown-value">{{ gameData.stats.great }}</span>
+        </div>
+        <div class="breakdown-item">
+          <span class="breakdown-label good">Good</span>
+          <span class="breakdown-value">{{ gameData.stats.good }}</span>
+        </div>
+        <div class="breakdown-item">
+          <span class="breakdown-label miss">Miss</span>
+          <span class="breakdown-value">{{ gameData.stats.miss }}</span>
+        </div>
+        <div class="breakdown-total">
+          总计: {{ getTotalNotes() }} 个音符
+        </div>
+      </div>
+
+      <ion-button expand="block" (click)="restartGame()">再玩一次</ion-button>
+      <ion-button expand="block" fill="outline" (click)="selectLevel(gameData.currentLevel?.id || 1)">
+        选择关卡
+      </ion-button>
+      <ion-button expand="block" fill="outline" (click)="goHome()" style="margin-top: 1rem;">
+        返回主页
+      </ion-button>
+    </div>
+  </div>
+</div>
+

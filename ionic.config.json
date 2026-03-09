@@ -1,0 +1,7 @@
+{
+  "name": "breakout-game",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular"
+}

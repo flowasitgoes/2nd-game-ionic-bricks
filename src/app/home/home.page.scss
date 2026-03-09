@@ -1,0 +1,153 @@
+ion-content {
+  --background: linear-gradient(135deg, rgb(208, 65, 94) 0%, rgb(208, 65, 94) 20%, rgb(214, 87, 103) calc(20% + 1px), rgb(214, 87, 103) 40%, rgb(219, 121, 113) calc(40% + 1px), rgb(219, 121, 113) 60%, rgb(224, 165, 124) calc(60% + 1px), rgb(224, 165, 124) 80%, rgb(230, 216, 134) calc(80% + 1px), rgb(230, 216, 134) 100%);
+}
+
+.lang-toggle {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 20;
+  padding: 0.5rem 0.9rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.1);
+  color: #e2e8f0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  transition: background 0.2s, transform 0.2s;
+}
+.lang-toggle:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.05);
+}
+
+.game-selection {
+  padding: 2rem 1.5rem;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.selection-header {
+  text-align: center;
+  margin-bottom: 2.5rem;
+  color: #f1f5f9;
+
+  h1 {
+    font-size: 2.55rem;
+    font-weight: 800;
+    margin-bottom: 0.75rem;
+    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+    letter-spacing: 0.02em;
+  }
+
+  p {
+    font-size: 1.25rem;
+    color: #e6e6e6;
+    line-height: 1.6;
+    max-width: 320px;
+    margin: 0 auto;
+  }
+}
+
+.game-cards {
+  width: 100%;
+  max-width: 540px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.game-card {
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+  background: #5762b5;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  width: 100%;
+
+  &:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+  }
+
+  &:active {
+    transform: translateY(-2px);
+  }
+
+  &.game-card-single {
+    ion-card-header {
+      padding: 2rem 2rem 0.75rem;
+      text-align: center;
+    }
+
+    ion-card-title {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: #f1f5f9;
+    }
+
+    ion-card-content {
+      padding: 0 2rem 2rem;
+
+      p {
+        color: #c3cedd;
+        line-height: 1.65;
+        margin-bottom: 1.5rem;
+        text-align: center;
+        font-size: 1.15rem;
+      }
+    }
+
+    .play-btn {
+      --background: linear-gradient(135deg, #22d3ee, #0ea5e9);
+      --background-activated: #06b6d4;
+      --color: #fff;
+      font-weight: 700;
+      font-size: 1.25rem;
+      border-radius: 14px;
+      margin: 0;
+    }
+  }
+
+  ion-card-header {
+    padding: 1.5rem 1.5rem 0.5rem;
+  }
+
+  ion-card-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #333;
+  }
+
+  ion-card-content {
+    padding: 0 1.5rem 1.5rem;
+
+    p {
+      color: #666;
+      line-height: 1.6;
+      margin-bottom: 1rem;
+    }
+  }
+}
+
+.game-features {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+
+  span {
+    padding: 0.5rem 1rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+}

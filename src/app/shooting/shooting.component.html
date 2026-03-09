@@ -1,0 +1,104 @@
+<div class="game-container">
+  <div #gameArea class="game-area" [class.playing]="gameState === GameState.PLAYING">
+    <!-- 準星（跟隨滑鼠） -->
+    <div
+      class="crosshair"
+      *ngIf="gameState === GameState.PLAYING"
+      [style.left.px]="crosshairX"
+      [style.top.px]="crosshairY"
+    ></div>
+
+    <!-- 遊戲資訊 -->
+    <div class="game-info" *ngIf="gameState === GameState.PLAYING">
+      <div class="info-item score-item">
+        <span class="label">分數</span>
+        <span class="value score-value">{{ score }}</span>
+      </div>
+      <div class="info-item combo-item" *ngIf="combo >= 2">
+        <span class="combo-badge">x{{ combo }} COMBO</span>
+      </div>
+      <div class="info-item time-item">
+        <span class="label">時間</span>
+        <span class="value time" [class.warning]="timeLeft <= 10">{{ timeLeft }}s</span>
+        <div class="time-bar"><div class="time-fill" [style.width.%]="(timeLeft / totalTime) * 100"></div></div>
+      </div>
+      <button type="button" class="sound-btn" (click)="toggleSound()" [attr.aria-label]="isSoundOn ? '靜音' : '開啟音效'">
+        {{ isSoundOn ? '🔊' : '🔇' }}
+      </button>
+    </div>
+
+    <!-- 靶子 -->
+    <div
+      *ngFor="let target of targets; trackBy: trackByTargetId"
+      class="target"
+      [class.hit]="target.hit"
+      [class.visible]="target.visible && !target.hit"
+      [style.left.px]="target.x"
+      [style.top.px]="target.y"
+      [style.width.px]="target.size"
+      [style.height.px]="target.size"
+      (click)="onTargetClick(target, $event)"
+    >
+      <div class="target-spawn-ripple"></div>
+      <div class="target-rings">
+        <div class="ring ring-1"></div>
+        <div class="ring ring-2"></div>
+        <div class="ring ring-3"></div>
+        <div class="ring ring-4"></div>
+      </div>
+      <div class="target-center"></div>
+    </div>
+
+    <!-- 擊中效果 -->
+    <div
+      *ngFor="let effect of hitEffects"
+      class="hit-effect"
+      [ngClass]="getRingClass(effect.ringIndex)"
+      [style.left.px]="effect.x"
+      [style.top.px]="effect.y"
+      [style.opacity]="effect.life / effect.maxLife"
+    >
+      <div class="explosion"></div>
+      <div class="score-popup">+{{ effect.score }}</div>
+      <div class="particles">
+        <span></span><span></span><span></span><span></span><span></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 倒數 overlay -->
+  <div class="countdown-overlay" *ngIf="gameState === GameState.COUNTDOWN">
+    <div class="countdown-num" *ngIf="countdownNumber > 0">{{ countdownNumber }}</div>
+    <div class="countdown-go" *ngIf="countdownNumber === 0">GO!</div>
+  </div>
+
+  <!-- 選單 -->
+  <div class="menu-overlay" *ngIf="gameState === GameState.MENU">
+    <div class="menu-content">
+      <div class="menu-icon">🎯</div>
+      <h1>射擊靶場</h1>
+      <p class="story-text">簡單輕鬆地射擊小遊戲，靶子緩慢得隨機出現，搭配簡易的配音，療癒你的無聊時刻，展現你的瞄準技巧</p>
+      <p class="high-score">最高記錄: {{ getHighScore() }} 分</p>
+      <ion-button expand="block" (click)="startGame()">開始射擊</ion-button>
+      <ion-button expand="block" fill="outline" (click)="goHome()" class="btn-secondary">
+        返回主頁
+      </ion-button>
+    </div>
+  </div>
+
+  <!-- 遊戲結束 -->
+  <div class="menu-overlay" *ngIf="gameState === GameState.GAME_OVER">
+    <div class="menu-content game-over-content">
+      <h1>遊戲結束</h1>
+      <p class="final-score">{{ score }} 分</p>
+      <p class="max-combo" *ngIf="maxCombo >= 2">最高連擊 x{{ maxCombo }}</p>
+      <p class="high-score" *ngIf="score > getHighScore()">🎉 新紀錄！</p>
+      <p class="high-score" *ngIf="score <= getHighScore()">最高記錄: {{ getHighScore() }} 分</p>
+      <ion-button expand="block" (click)="restartGame()">再試一次</ion-button>
+      <ion-button expand="block" fill="outline" (click)="goHome()" class="btn-secondary">
+        返回主頁
+      </ion-button>
+    </div>
+  </div>
+</div>
+

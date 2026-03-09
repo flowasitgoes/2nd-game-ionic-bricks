@@ -1,0 +1,140 @@
+<div class="game-container">
+  <button type="button" class="lang-toggle" (click)="toggleLang()" [attr.aria-label]="currentLang === 'en' ? 'Switch to Chinese' : '切換至英文'">
+    {{ currentLang === 'en' ? '中文' : 'EN' }}
+  </button>
+  <canvas #gameCanvas class="game-canvas"></canvas>
+  
+  <!-- 移动端控制按钮 -->
+  <div class="mobile-controls" *ngIf="gameData.state === gameState.PLAYING || gameData.state === gameState.PAUSED">
+    <button 
+      class="control-btn left-btn" 
+      (touchstart)="onTouchStart('left')"
+      (touchend)="onTouchEnd('left')"
+      (touchcancel)="onTouchEnd('left')"
+      type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M15 18l-6-6 6-6"/>
+      </svg>
+    </button>
+    <button 
+      class="control-btn jump-btn" 
+      (touchstart)="onTouchStart('jump')"
+      (touchend)="onTouchEnd('jump')"
+      (touchcancel)="onTouchEnd('jump')"
+      type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 5v14M5 12l7-7 7 7"/>
+      </svg>
+    </button>
+    <button 
+      class="control-btn right-btn" 
+      (touchstart)="onTouchStart('right')"
+      (touchend)="onTouchEnd('right')"
+      (touchcancel)="onTouchEnd('right')"
+      type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M9 18l6-6-6-6"/>
+      </svg>
+    </button>
+  </div>
+  
+  <!-- Menu -->
+  <div class="menu-overlay" *ngIf="gameData.state === gameState.MENU">
+    <div class="menu-content">
+      <h1>{{ t.gameTitle }}</h1>
+      <p class="game-description">{{ t.gameDesc }}</p>
+      
+      <div class="mode-selection">
+        <h3>{{ t.chooseMode }}</h3>
+        
+        <div class="mode-option" (click)="selectMode('free')">
+          <input type="radio" name="mode" [checked]="gameData.gameMode === 'free'" (click)="selectMode('free')">
+          <label>
+            <strong>{{ t.freeMode }}</strong>
+            <span>{{ t.freeModeDesc }}</span>
+          </label>
+        </div>
+        
+        <div class="mode-option" (click)="selectMode('song')">
+          <input type="radio" name="mode" [checked]="gameData.gameMode === 'song'" (click)="selectMode('song')">
+          <label>
+            <strong>{{ t.songMode }}</strong>
+            <span>{{ t.songModeDesc }}</span>
+          </label>
+        </div>
+        
+        <div class="mode-option" (click)="selectMode('creative')">
+          <input type="radio" name="mode" [checked]="gameData.gameMode === 'creative'" (click)="selectMode('creative')">
+          <label>
+            <strong>{{ t.creativeMode }}</strong>
+            <span>{{ t.creativeModeDesc }}</span>
+          </label>
+        </div>
+        
+        <div class="song-selection" *ngIf="gameData.gameMode === 'song'">
+          <h4>{{ t.selectSong }}</h4>
+          <div class="song-list">
+            <div 
+              *ngFor="let song of availableSongs" 
+              class="song-item"
+              [class.selected]="selectedSongId === song.id"
+              (click)="selectSong(song.id)">
+              <strong>{{ song.name }}</strong>
+              <span>{{ song.description }}</span>
+              <span class="difficulty">{{ t.difficulty }}: {{ song.difficulty === 'easy' ? t.easy : song.difficulty === 'medium' ? t.medium : t.hard }}</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="creative-controls" *ngIf="gameData.gameMode === 'creative'">
+          <p>{{ t.recorded }}: {{ jumpingService.getCreativeSequence().length }} {{ t.chords }}</p>
+          <div class="creative-buttons">
+            <button class="play-button" (click)="playCreativeSequence()" [disabled]="isPlayingCreative || jumpingService.getCreativeSequence().length === 0">
+              {{ isPlayingCreative ? t.playing : t.playSequence }}
+            </button>
+            <button class="clear-button" (click)="clearCreativeSequence()" [disabled]="jumpingService.getCreativeSequence().length === 0">
+              {{ t.clearSequence }}
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="controls-info">
+        <p><strong>{{ t.controls }}</strong></p>
+        <ul>
+          <li>{{ t.controlsArrow }}</li>
+          <li>{{ t.controlsJump }}</li>
+          <li>{{ t.controlsPause }}</li>
+          <li><strong>{{ t.mobile }}</strong> {{ t.controlsMobile }}</li>
+        </ul>
+      </div>
+      
+      <button class="start-button" (click)="startGame()" [disabled]="gameData.gameMode === 'song' && !selectedSongId">
+        {{ gameData.gameMode === 'song' && !selectedSongId ? t.selectSongFirst : t.startGame }}
+      </button>
+      
+      <div class="high-score" *ngIf="highScore > 0">
+        <p>{{ t.highScore }}: {{ highScore | number:'1.0-0' }}m</p>
+      </div>
+      
+      <button class="home-button" (click)="goHome()">{{ t.backHome }}</button>
+    </div>
+  </div>
+
+  <!-- Game Over -->
+  <div class="game-over-overlay" *ngIf="gameData.state === gameState.GAME_OVER">
+    <div class="game-over-content">
+      <h1>{{ t.gameOver }}</h1>
+      <div class="final-stats">
+        <p>{{ t.finalScore }}: <strong>{{ gameData.score }}</strong></p>
+        <p>{{ t.heightReached }}: <strong>{{ gameData.height | number:'1.0-0' }}m</strong></p>
+        <p *ngIf="highScore > 0">
+          {{ t.highRecord }}: <strong>{{ highScore | number:'1.0-0' }}m</strong>
+        </p>
+      </div>
+      <button class="restart-button" (click)="startGame()">{{ t.again }}</button>
+      <button class="home-button" (click)="goHome()">{{ t.backHome }}</button>
+    </div>
+  </div>
+</div>
+

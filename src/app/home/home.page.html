@@ -1,0 +1,23 @@
+<ion-content [fullscreen]="true">
+  <button type="button" class="lang-toggle" (click)="toggleLang()" [attr.aria-label]="currentLang === 'en' ? 'Switch to Chinese' : '切換至英文'">
+    {{ currentLang === 'en' ? '中文' : 'EN' }}
+  </button>
+  <div class="game-selection">
+    <div class="selection-header">
+      <h1>{{ t.title }}</h1>
+      <p>{{ t.subtitle }}</p>
+    </div>
+    
+    <div class="game-cards">
+      <ion-card class="game-card game-card-single" (click)="navigateToGame('jumping')">
+        <ion-card-header>
+          <ion-card-title>{{ t.startGame }}</ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <p>{{ t.description }}</p>
+          <ion-button expand="block" class="play-btn">{{ t.playBtn }}</ion-button>
+        </ion-card-content>
+      </ion-card>
+    </div>
+  </div>
+</ion-content>

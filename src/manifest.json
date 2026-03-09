@@ -1,0 +1,26 @@
+{
+  "name": "Platform Jumper | 跳躍階梯遊戲",
+  "short_name": "Platform Jumper",
+  "description": "跳躍階梯／跳平台遊戲，抽象化攀岩精神，每跳一格都有鋼琴、吉他般音效。無限跳躍、無限重試，適合全家與新手的休閒網頁遊戲。",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#d0415e",
+  "theme_color": "#5762b5",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "assets/icon/jump-stairs-icon-192.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/icon/jump-stairs-icon-512.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["games", "entertainment"],
+  "lang": "zh-Hant"
+}
