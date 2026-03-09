@@ -70,7 +70,7 @@ export class HomePage implements OnInit {
     }
   }
 
-  navigateToGame(game: 'breakout' | 'rhythm' | 'shooting' | 'catching' | 'jumping'): void {
+  navigateToGame(game: 'jumping'): void {
     this.router.navigate([`/${game}`]);
   }
 }
